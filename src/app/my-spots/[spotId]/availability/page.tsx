@@ -3,9 +3,9 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { SpotAvailabilityCalendar } from "@/components/parking/spot-availability-calendar";
-import { getSpotById } from "@/lib/mock-data"; // Using mock data
+import { getSpotById } from "@/lib/mock-data"; 
 import type { ParkingSpot } from "@/types";
 import { Logo } from "@/components/logo";
 import { UserNav } from "@/components/layout/user-nav";
@@ -20,26 +20,42 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, ParkingSquare, CalendarCheck, ArrowLeft, AlertTriangle } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, ArrowLeft, AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/contexts/auth-context";
 
 
 export default function ManageSpotAvailabilityPage() {
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const router = useRouter();
   const params = useParams();
   const spotId = params.spotId as string;
-  const [spot, setSpot] = React.useState<ParkingSpot | null | undefined>(undefined); // undefined for loading state
+  const [spot, setSpot] = React.useState<ParkingSpot | null | undefined>(undefined); 
   const { isMobile } = useSidebar();
 
   React.useEffect(() => {
-    if (spotId) {
+    if (!isAuthLoading && !isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isAuthenticated, isAuthLoading, router]);
+
+  React.useEffect(() => {
+    if (isAuthenticated && spotId) {
       const foundSpot = getSpotById(spotId);
-      // Simulate API delay
       setTimeout(() => setSpot(foundSpot || null), 500);
     }
-  }, [spotId]);
+  }, [spotId, isAuthenticated]);
 
-  if (spot === undefined) {
+  if (isAuthLoading || !isAuthenticated) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (spot === undefined) { // Spot data is loading
     return (
        <div className="flex min-h-screen w-full">
          <Sidebar collapsible="icon" variant="sidebar" className="border-r">
@@ -63,7 +79,7 @@ export default function ManageSpotAvailabilityPage() {
     );
   }
   
-  if (spot === null) {
+  if (spot === null) { // Spot not found
      return (
       <div className="flex min-h-screen w-full items-center justify-center p-4">
         <div className="text-center">
@@ -77,7 +93,6 @@ export default function ManageSpotAvailabilityPage() {
       </div>
     );
   }
-
 
   return (
     <div className="flex min-h-screen w-full">

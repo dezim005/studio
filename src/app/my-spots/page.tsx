@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ParkingSpotCard } from "@/components/parking/parking-spot-card";
 import type { ParkingSpot } from "@/types";
-import { mockParkingSpots } from "@/lib/mock-data"; // Using all spots for demo, filter by ownerId in real app
-import { PlusCircle, ParkingSquare, LayoutDashboard, CalendarCheck } from "lucide-react";
+import { mockParkingSpots } from "@/lib/mock-data"; 
+import { PlusCircle, ParkingSquare, LayoutDashboard, CalendarCheck, Loader2 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { UserNav } from "@/components/layout/user-nav";
 import {
@@ -22,12 +22,30 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/contexts/auth-context";
+import { useRouter } from "next/navigation";
 
 export default function MySpotsPage() {
+  const { isAuthenticated, user, isLoading: isAuthLoading } = useAuth();
+  const router = useRouter();
   const { isMobile } = useSidebar();
-  // Filter spots owned by the current user (user1 is placeholder for logged-in user)
-  const mySpots = mockParkingSpots.filter(spot => spot.ownerId === 'user1');
+
+  React.useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isAuthenticated, isAuthLoading, router]);
+
+  if (isAuthLoading || !isAuthenticated) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  // Filter spots owned by the current user
+  const mySpots = user ? mockParkingSpots.filter(spot => spot.ownerId === user.id) : [];
 
   return (
     <div className="flex min-h-screen w-full">

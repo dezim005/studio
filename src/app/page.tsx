@@ -21,7 +21,7 @@ import { Logo } from "@/components/logo";
 import { UserNav } from "@/components/layout/user-nav";
 import type { ParkingSpot } from "@/types";
 import { mockParkingSpots } from "@/lib/mock-data";
-import { LayoutDashboard, ParkingSquare, CalendarCheck, PlusCircle, Search, Filter, List, Map } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, Search, Filter, List, Map, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -31,19 +31,29 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-
+import { useAuth } from "@/contexts/auth-context";
+import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const router = useRouter();
+
   const [spots, setSpots] = React.useState<ParkingSpot[]>(mockParkingSpots);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [filterType, setFilterType] = React.useState<string>("all");
   const [filterAvailability, setFilterAvailability] = React.useState<string>("all");
-  const [viewMode, setViewMode] = React.useState<"list" | "map">("list"); // Map view is conceptual
+  const [viewMode, setViewMode] = React.useState<"list" | "map">("list"); 
 
   const { isMobile } = useSidebar();
 
-  // Simulate real-time updates
   React.useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isAuthenticated, isAuthLoading, router]);
+
+  React.useEffect(() => {
+    if (!isAuthenticated) return; // Don't run effects if not authenticated
     const interval = setInterval(() => {
       setSpots((prevSpots) =>
         prevSpots.map((spot) =>
@@ -52,9 +62,17 @@ export default function DashboardPage() {
             : spot
         )
       );
-    }, 5000); // Update every 5 seconds
+    }, 5000); 
     return () => clearInterval(interval);
-  }, []);
+  }, [isAuthenticated]);
+
+  if (isAuthLoading || !isAuthenticated) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   const filteredSpots = spots.filter(spot => {
     const matchesSearch = spot.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -67,9 +85,7 @@ export default function DashboardPage() {
   });
 
   const handleReserveSpot = (spotId: string) => {
-    // Placeholder for reservation logic
     alert(`Reserving spot ${spotId}. Redirecting to reservation page...`);
-    // router.push(`/reservations/new?spotId=${spotId}`);
   };
 
   return (
@@ -167,7 +183,7 @@ export default function DashboardPage() {
                 <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="sm" onClick={() => setViewMode('list')}>
                   <List className="mr-2 h-4 w-4"/> List
                 </Button>
-                <Button variant={viewMode === 'map' ? 'secondary' : 'ghost'} size="sm" onClick={() => setViewMode('map')} disabled> {/* Map view disabled for now */}
+                <Button variant={viewMode === 'map' ? 'secondary' : 'ghost'} size="sm" onClick={() => setViewMode('map')} disabled> 
                   <Map className="mr-2 h-4 w-4"/> Map (Soon)
                 </Button>
               </div>

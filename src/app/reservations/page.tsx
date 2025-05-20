@@ -20,21 +20,37 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, ParkingSquare, CalendarCheck } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/auth-context";
+import { useRouter } from "next/navigation";
 
 export default function ReservationsPage() {
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const router = useRouter();
   const { toast } = useToast();
   const { isMobile } = useSidebar();
 
+  React.useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isAuthenticated, isAuthLoading, router]);
+
+  if (isAuthLoading || !isAuthenticated) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   const handleReserveSpot = (spotId: string, details: ReservationDetails) => {
     console.log("Reserving spot:", spotId, "Details:", details);
-    // Simulate API call for reservation
     toast({
       title: "Reservation Requested",
       description: `Request to reserve spot ${spotId} from ${details.dateRange.from?.toLocaleDateString()} to ${details.dateRange.to?.toLocaleDateString()} has been submitted.`,
       variant: "default"
     });
-    // In a real app, you might redirect to a confirmation page or update UI
   };
 
   return (
@@ -105,4 +121,3 @@ export default function ReservationsPage() {
     </div>
   );
 }
-

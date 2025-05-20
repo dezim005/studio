@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { SpotStatusBadge } from "./spot-status-badge";
 import { Car, MapPin, ParkingCircle, Tag, CalendarDays } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/contexts/auth-context"; // Import useAuth
 
 interface ParkingSpotCardProps {
   spot: ParkingSpot;
@@ -13,6 +14,8 @@ interface ParkingSpotCardProps {
 }
 
 export function ParkingSpotCard({ spot, showActions = false, onReserve }: ParkingSpotCardProps) {
+  const { user } = useAuth(); // Get current user from auth context
+
   return (
     <Card className="w-full shadow-lg hover:shadow-xl transition-shadow duration-300">
       <CardHeader>
@@ -49,7 +52,7 @@ export function ParkingSpotCard({ spot, showActions = false, onReserve }: Parkin
               Unavailable
             </Button>
           )}
-          {spot.ownerId === "user1" && ( // Placeholder for current user owning the spot
+          {user && spot.ownerId === user.id && ( // Check if current authenticated user owns the spot
             <Link href={`/my-spots/${spot.id}/availability`} passHref legacyBehavior>
               <Button variant="outline" className="w-full sm:w-auto">
                 <CalendarDays className="mr-2 h-4 w-4" /> Manage Availability

@@ -13,22 +13,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LogOut, Settings, User as UserIcon } from "lucide-react";
+import { useAuth } from "@/contexts/auth-context";
 
 export function UserNav() {
-  // Placeholder user data
-  const user = {
-    name: "Resident User",
-    email: "resident@example.com",
-    avatarUrl: "https://placehold.co/40x40.png", 
-  };
+  const { user, logout, isAuthenticated } = useAuth();
+
+  if (!isAuthenticated || !user) {
+    // Or render a Login button, or null if handled by parent
+    return null; 
+  }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-9 w-9" data-ai-hint="user avatar">
-            <AvatarImage src={user.avatarUrl} alt={user.name} />
-            <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+            {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name || "User"} />}
+            <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : "U"}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
@@ -53,7 +54,7 @@ export function UserNav() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={logout}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
         </DropdownMenuItem>

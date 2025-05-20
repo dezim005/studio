@@ -45,10 +45,13 @@ export default function ReservationsPage() {
   }
 
   const handleReserveSpot = (spotId: string, details: ReservationDetails) => {
-    console.log("Reserving spot:", spotId, "Details:", details);
+    console.log("Reservando vaga:", spotId, "Detalhes:", details);
+    const fromDate = details.dateRange.from?.toLocaleDateString('pt-BR') || 'Data de início não selecionada';
+    const toDate = details.dateRange.to?.toLocaleDateString('pt-BR') || fromDate;
+
     toast({
-      title: "Reservation Requested",
-      description: `Request to reserve spot ${spotId} from ${details.dateRange.from?.toLocaleDateString()} to ${details.dateRange.to?.toLocaleDateString()} has been submitted.`,
+      title: "Reserva Solicitada",
+      description: `Solicitação para reservar a vaga ${spotId} de ${fromDate} até ${toDate} foi enviada.`,
       variant: "default"
     });
   };
@@ -66,25 +69,25 @@ export default function ReservationsPage() {
           <SidebarMenu>
             <SidebarMenuItem>
               <Link href="/" legacyBehavior passHref>
-                <SidebarMenuButton tooltip="Dashboard">
+                <SidebarMenuButton tooltip="Painel">
                   <LayoutDashboard />
-                  <span>Dashboard</span>
+                  <span>Painel</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <Link href="/my-spots" legacyBehavior passHref>
-                <SidebarMenuButton tooltip="My Spots">
+                <SidebarMenuButton tooltip="Minhas Vagas">
                   <ParkingSquare />
-                  <span>My Spots</span>
+                  <span>Minhas Vagas</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <Link href="/reservations" legacyBehavior passHref>
-                <SidebarMenuButton isActive tooltip="Reserve a Spot">
+                <SidebarMenuButton isActive tooltip="Reservar Vaga">
                   <CalendarCheck />
-                  <span>Reserve a Spot</span>
+                  <span>Reservar Vaga</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
@@ -95,7 +98,7 @@ export default function ReservationsPage() {
       <SidebarInset className="flex flex-col">
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
           {isMobile && <SidebarTrigger />}
-          <h1 className="text-xl font-semibold md:text-2xl">Reserve a Parking Spot</h1>
+          <h1 className="text-xl font-semibold md:text-2xl">Reservar Vaga de Estacionamento</h1>
           <div className="ml-auto">
             <UserNav />
           </div>
@@ -104,9 +107,9 @@ export default function ReservationsPage() {
         <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
           <Card className="shadow-md">
             <CardHeader>
-              <CardTitle className="text-2xl">Find and Reserve Your Spot</CardTitle>
+              <CardTitle className="text-2xl">Encontre e Reserve Sua Vaga</CardTitle>
               <CardDescription>
-                Browse available parking spots, filter by your preferences, and make a reservation.
+                Navegue pelas vagas disponíveis, filtre por suas preferências e faça uma reserva.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -115,7 +118,7 @@ export default function ReservationsPage() {
           </Card>
         </main>
         <footer className="border-t p-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Vaga Livre. All rights reserved.
+          © {new Date().getFullYear()} Vaga Livre. Todos os direitos reservados.
         </footer>
       </SidebarInset>
     </div>

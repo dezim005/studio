@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/popover"
 import type { DateRange } from "react-day-picker";
 import { addDays, format } from "date-fns";
+import { ptBR } from 'date-fns/locale';
 import { Search, ParkingSquare, CalendarIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -32,7 +33,6 @@ interface AvailableSpotsListProps {
 
 export interface ReservationDetails {
   dateRange: DateRange;
-  // Potentially add time slots here if needed
 }
 
 function DateRangePicker({
@@ -56,14 +56,14 @@ function DateRangePicker({
             {date?.from ? (
               date.to ? (
                 <>
-                  {format(date.from, "LLL dd, y")} -{" "}
-                  {format(date.to, "LLL dd, y")}
+                  {format(date.from, "PPP", { locale: ptBR })} -{" "}
+                  {format(date.to, "PPP", { locale: ptBR })}
                 </>
               ) : (
-                format(date.from, "LLL dd, y")
+                format(date.from, "PPP", { locale: ptBR })
               )
             ) : (
-              <span>Pick a date range</span>
+              <span>Escolha um período</span>
             )}
           </Button>
         </PopoverTrigger>
@@ -76,6 +76,7 @@ function DateRangePicker({
             onSelect={onDateChange}
             numberOfMonths={2}
             disabled={(day) => day < new Date(new Date().setHours(0,0,0,0))}
+            locale={ptBR}
           />
         </PopoverContent>
       </Popover>
@@ -89,18 +90,16 @@ export function AvailableSpotsList({ spots, onReserveSpot }: AvailableSpotsListP
   const [filterType, setFilterType] = React.useState<string>("all");
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>({
     from: new Date(),
-    to: addDays(new Date(), 0), // Default to today
+    to: addDays(new Date(), 0), 
   });
   const { toast } = useToast();
 
-  const availableSpots = spots.filter(spot => spot.isAvailable); // Only show initially available spots
+  const availableSpots = spots.filter(spot => spot.isAvailable); 
 
   const filteredSpots = availableSpots.filter(spot => {
     const matchesSearch = spot.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           spot.location.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = filterType === 'all' || spot.type === filterType;
-    // Date filtering would be more complex, checking against spot's availability slots.
-    // For this demo, we assume all 'isAvailable' spots match the selected dateRange if one is picked.
     const matchesDate = !!dateRange?.from; 
     return matchesSearch && matchesType && matchesDate;
   });
@@ -108,8 +107,8 @@ export function AvailableSpotsList({ spots, onReserveSpot }: AvailableSpotsListP
   const handleReserve = (spotId: string) => {
     if (!dateRange || !dateRange.from) {
       toast({
-        title: "Select Date Range",
-        description: "Please select a date range for your reservation.",
+        title: "Selecione o Período",
+        description: "Por favor, selecione um período para sua reserva.",
         variant: "destructive",
       });
       return;
@@ -124,7 +123,7 @@ export function AvailableSpotsList({ spots, onReserveSpot }: AvailableSpotsListP
           <Search className="absolute left-2.5 top-3 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search by spot number or location..."
+            placeholder="Buscar por número da vaga ou localização..."
             className="pl-8 w-full"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -132,14 +131,14 @@ export function AvailableSpotsList({ spots, onReserveSpot }: AvailableSpotsListP
         </div>
         <Select value={filterType} onValueChange={setFilterType}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Filter by type" />
+            <SelectValue placeholder="Filtrar por tipo" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="compact">Compact</SelectItem>
-            <SelectItem value="standard">Standard</SelectItem>
+            <SelectItem value="all">Todos os Tipos</SelectItem>
+            <SelectItem value="compact">Compacto</SelectItem>
+            <SelectItem value="standard">Padrão</SelectItem>
             <SelectItem value="suv">SUV</SelectItem>
-            <SelectItem value="motorcycle">Motorcycle</SelectItem>
+            <SelectItem value="motorcycle">Moto</SelectItem>
           </SelectContent>
         </Select>
         <DateRangePicker date={dateRange} onDateChange={setDateRange} />
@@ -154,11 +153,10 @@ export function AvailableSpotsList({ spots, onReserveSpot }: AvailableSpotsListP
       ) : (
         <div className="text-center py-10 border rounded-md bg-card">
           <ParkingSquare className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-          <p className="text-lg font-medium text-muted-foreground">No available spots match your criteria.</p>
-          <p className="text-sm text-muted-foreground">Try adjusting your search, filters, or selected date range.</p>
+          <p className="text-lg font-medium text-muted-foreground">Nenhuma vaga disponível corresponde aos seus critérios.</p>
+          <p className="text-sm text-muted-foreground">Tente ajustar sua busca, filtros ou período selecionado.</p>
         </div>
       )}
     </div>
   );
 }
-

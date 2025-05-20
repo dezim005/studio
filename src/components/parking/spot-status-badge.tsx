@@ -16,7 +16,7 @@ export function SpotStatusBadge({ isAvailable, className }: SpotStatusBadgeProps
         className
       )}
     >
-      {isAvailable ? "Available" : "Occupied"}
+      {isAvailable ? "Disponível" : "Ocupada"}
     </Badge>
   );
 }

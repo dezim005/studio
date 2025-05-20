@@ -21,8 +21,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Mock user data, replace with actual data fetching in a real app
 const MOCK_USER: User = {
   id: "user1",
-  name: "Resident User",
-  email: "resident@example.com",
+  name: "Usuário Residente",
+  email: "residente@exemplo.com",
   role: "resident",
   avatarUrl: "https://placehold.co/40x40.png",
 };
@@ -44,29 +44,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch (error) {
-      console.error("Failed to load auth state from localStorage", error);
-      // Clear potentially corrupted storage
+      console.error("Falha ao carregar o estado de autenticação do localStorage", error);
       localStorage.removeItem("vagaLivreAuth");
     }
     setIsLoading(false);
   }, []);
 
   const login = async (data: { email: string; name?: string }) => {
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 500));
     const loggedInUser: User = {
       ...MOCK_USER,
       email: data.email,
-      name: data.name || MOCK_USER.name, // Use provided name or default
+      name: data.name || MOCK_USER.name, 
     };
     setIsAuthenticated(true);
     setUser(loggedInUser);
     try {
       localStorage.setItem("vagaLivreAuth", JSON.stringify({ isAuthenticated: true, user: loggedInUser }));
     } catch (error) {
-      console.error("Failed to save auth state to localStorage", error);
+      console.error("Falha ao salvar o estado de autenticação no localStorage", error);
     }
-    router.push("/"); // Redirect to dashboard after login
+    router.push("/"); 
   };
 
   const logout = () => {
@@ -75,9 +73,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       localStorage.removeItem("vagaLivreAuth");
     } catch (error) {
-      console.error("Failed to remove auth state from localStorage", error);
+      console.error("Falha ao remover o estado de autenticação do localStorage", error);
     }
-    router.push("/login"); // Redirect to login page after logout
+    router.push("/login"); 
   };
 
   return (
@@ -90,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error("useAuth deve ser usado dentro de um AuthProvider");
   }
   return context;
 }

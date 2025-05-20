@@ -30,11 +30,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ParkingSquare } from "lucide-react";
 
 const spotRegistrationSchema = z.object({
-  spotNumber: z.string().min(1, "Spot number is required"),
+  spotNumber: z.string().min(1, "Número da vaga é obrigatório"),
   spotType: z.enum(["compact", "standard", "suv", "motorcycle"], {
-    required_error: "Spot type is required.",
+    required_error: "Tipo da vaga é obrigatório.",
   }),
-  locationDetails: z.string().min(5, "Location details must be at least 5 characters"),
+  locationDetails: z.string().min(5, "Detalhes da localização devem ter pelo menos 5 caracteres"),
   additionalNotes: z.string().optional(),
 });
 
@@ -52,17 +52,14 @@ export function SpotRegistrationForm() {
   });
 
   async function onSubmit(data: SpotRegistrationFormValues) {
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log("Spot registration data:", data);
+    console.log("Dados de cadastro da vaga:", data);
     toast({
-      title: "Spot Registered!",
-      description: `Spot ${data.spotNumber} has been successfully registered.`,
+      title: "Vaga Cadastrada!",
+      description: `A vaga ${data.spotNumber} foi cadastrada com sucesso.`,
       variant: "default"
     });
     form.reset();
-    // Potentially redirect or update UI state
-    // router.push('/my-spots'); 
   }
 
   return (
@@ -70,10 +67,10 @@ export function SpotRegistrationForm() {
       <CardHeader>
         <CardTitle className="text-2xl flex items-center">
           <ParkingSquare className="mr-2 h-6 w-6 text-primary" />
-          Register a New Parking Spot
+          Cadastrar Nova Vaga de Estacionamento
         </CardTitle>
         <CardDescription>
-          Provide the details of your parking spot to make it available for others.
+          Forneça os detalhes da sua vaga de estacionamento para disponibilizá-la para outros.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -84,12 +81,12 @@ export function SpotRegistrationForm() {
               name="spotNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Spot Number</FormLabel>
+                  <FormLabel>Número da Vaga</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., A01, 12B" {...field} />
+                    <Input placeholder="ex: A01, 12B" {...field} />
                   </FormControl>
                   <FormDescription>
-                    The unique identifier for your parking spot.
+                    O identificador único para sua vaga de estacionamento.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -101,22 +98,22 @@ export function SpotRegistrationForm() {
               name="spotType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Spot Type</FormLabel>
+                  <FormLabel>Tipo da Vaga</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a spot type" />
+                        <SelectValue placeholder="Selecione um tipo de vaga" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="compact">Compact</SelectItem>
-                      <SelectItem value="standard">Standard</SelectItem>
-                      <SelectItem value="suv">SUV / Large</SelectItem>
-                      <SelectItem value="motorcycle">Motorcycle</SelectItem>
+                      <SelectItem value="compact">Compacto</SelectItem>
+                      <SelectItem value="standard">Padrão</SelectItem>
+                      <SelectItem value="suv">SUV / Grande</SelectItem>
+                      <SelectItem value="motorcycle">Moto</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormDescription>
-                    Choose the type that best describes your parking spot.
+                    Escolha o tipo que melhor descreve sua vaga de estacionamento.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -128,16 +125,16 @@ export function SpotRegistrationForm() {
               name="locationDetails"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Location Details</FormLabel>
+                  <FormLabel>Detalhes da Localização</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="e.g., Level 2, near the north elevator, covered"
+                      placeholder="ex: Nível 2, perto do elevador norte, coberta"
                       className="resize-none"
                       {...field}
                     />
                   </FormControl>
                   <FormDescription>
-                    Be specific about the location to help others find it easily.
+                    Seja específico sobre a localização para ajudar outros a encontrá-la facilmente.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -149,16 +146,16 @@ export function SpotRegistrationForm() {
               name="additionalNotes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Additional Notes (Optional)</FormLabel>
+                  <FormLabel>Observações Adicionais (Opcional)</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="e.g., Spot is narrow, EV charging available nearby"
+                      placeholder="ex: Vaga estreita, carregamento EV disponível nas proximidades"
                       className="resize-none"
                       {...field}
                     />
                   </FormControl>
                    <FormDescription>
-                    Any other relevant information about the spot.
+                    Qualquer outra informação relevante sobre a vaga.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -166,7 +163,7 @@ export function SpotRegistrationForm() {
             />
             
             <Button type="submit" className="w-full sm:w-auto" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? "Registering..." : "Register Spot"}
+              {form.formState.isSubmitting ? "Cadastrando..." : "Cadastrar Vaga"}
             </Button>
           </form>
         </Form>

@@ -44,7 +44,6 @@ export default function MySpotsPage() {
     );
   }
   
-  // Filter spots owned by the current user
   const mySpots = user ? mockParkingSpots.filter(spot => spot.ownerId === user.id) : [];
 
   return (
@@ -60,25 +59,25 @@ export default function MySpotsPage() {
           <SidebarMenu>
             <SidebarMenuItem>
               <Link href="/" legacyBehavior passHref>
-                <SidebarMenuButton tooltip="Dashboard">
+                <SidebarMenuButton tooltip="Painel">
                   <LayoutDashboard />
-                  <span>Dashboard</span>
+                  <span>Painel</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <Link href="/my-spots" legacyBehavior passHref>
-                <SidebarMenuButton isActive tooltip="My Spots">
+                <SidebarMenuButton isActive tooltip="Minhas Vagas">
                   <ParkingSquare />
-                  <span>My Spots</span>
+                  <span>Minhas Vagas</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <Link href="/reservations" legacyBehavior passHref>
-                <SidebarMenuButton tooltip="Reserve a Spot">
+                <SidebarMenuButton tooltip="Reservar Vaga">
                   <CalendarCheck />
-                  <span>Reserve a Spot</span>
+                  <span>Reservar Vaga</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
@@ -89,11 +88,11 @@ export default function MySpotsPage() {
       <SidebarInset className="flex flex-col">
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
           {isMobile && <SidebarTrigger />}
-          <h1 className="text-xl font-semibold md:text-2xl">My Parking Spots</h1>
+          <h1 className="text-xl font-semibold md:text-2xl">Minhas Vagas de Estacionamento</h1>
           <div className="ml-auto flex items-center gap-4">
             <Link href="/my-spots/register" passHref legacyBehavior>
               <Button>
-                <PlusCircle className="mr-2 h-4 w-4" /> Register New Spot
+                <PlusCircle className="mr-2 h-4 w-4" /> Cadastrar Nova Vaga
               </Button>
             </Link>
             <UserNav />
@@ -103,8 +102,8 @@ export default function MySpotsPage() {
         <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
           <Card className="shadow-md">
             <CardHeader>
-              <CardTitle className="text-2xl">Manage Your Spots</CardTitle>
-              <CardDescription>View, edit availability, and manage your registered parking spots.</CardDescription>
+              <CardTitle className="text-2xl">Gerencie Suas Vagas</CardTitle>
+              <CardDescription>Visualize, edite a disponibilidade e gerencie suas vagas de estacionamento cadastradas.</CardDescription>
             </CardHeader>
             <CardContent>
               {mySpots.length > 0 ? (
@@ -116,10 +115,10 @@ export default function MySpotsPage() {
               ) : (
                 <div className="text-center py-10">
                    <ParkingSquare className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-lg font-medium text-muted-foreground">You haven't registered any spots yet.</p>
+                  <p className="text-lg font-medium text-muted-foreground">Você ainda não cadastrou nenhuma vaga.</p>
                   <Link href="/my-spots/register" passHref legacyBehavior>
                     <Button className="mt-4">
-                      <PlusCircle className="mr-2 h-4 w-4" /> Register Your First Spot
+                      <PlusCircle className="mr-2 h-4 w-4" /> Cadastrar Sua Primeira Vaga
                     </Button>
                   </Link>
                 </div>
@@ -128,7 +127,7 @@ export default function MySpotsPage() {
           </Card>
         </main>
         <footer className="border-t p-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Vaga Livre. All rights reserved.
+          © {new Date().getFullYear()} Vaga Livre. Todos os direitos reservados.
         </footer>
       </SidebarInset>
     </div>

@@ -19,17 +19,25 @@ export function UserNav() {
   const { user, logout, isAuthenticated } = useAuth();
 
   if (!isAuthenticated || !user) {
-    // Or render a Login button, or null if handled by parent
     return null; 
+  }
+
+  const getInitials = (name: string | undefined) => {
+    if (!name) return "U";
+    const names = name.split(' ');
+    if (names.length > 1) {
+      return `${names[0][0]}${names[names.length -1][0]}`.toUpperCase();
+    }
+    return name.charAt(0).toUpperCase();
   }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-          <Avatar className="h-9 w-9" data-ai-hint="user avatar">
-            {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name || "User"} />}
-            <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : "U"}</AvatarFallback>
+          <Avatar className="h-9 w-9" data-ai-hint="avatar usuário">
+            {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name || "Usuário"} />}
+            <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
@@ -46,17 +54,17 @@ export function UserNav() {
         <DropdownMenuGroup>
           <DropdownMenuItem>
             <UserIcon className="mr-2 h-4 w-4" />
-            <span>Profile</span>
+            <span>Perfil</span>
           </DropdownMenuItem>
           <DropdownMenuItem>
             <Settings className="mr-2 h-4 w-4" />
-            <span>Settings</span>
+            <span>Configurações</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={logout}>
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
+          <span>Sair</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

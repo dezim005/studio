@@ -54,25 +54,25 @@ export default function RegisterSpotPage() {
           <SidebarMenu>
             <SidebarMenuItem>
               <Link href="/" legacyBehavior passHref>
-                <SidebarMenuButton tooltip="Dashboard">
+                <SidebarMenuButton tooltip="Painel">
                   <LayoutDashboard />
-                  <span>Dashboard</span>
+                  <span>Painel</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <Link href="/my-spots" legacyBehavior passHref>
-                <SidebarMenuButton isActive tooltip="My Spots">
+                <SidebarMenuButton isActive tooltip="Minhas Vagas">
                   <ParkingSquare />
-                  <span>My Spots</span>
+                  <span>Minhas Vagas</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <Link href="/reservations" legacyBehavior passHref>
-                <SidebarMenuButton tooltip="Reserve a Spot">
+                <SidebarMenuButton tooltip="Reservar Vaga">
                   <CalendarCheck />
-                  <span>Reserve a Spot</span>
+                  <span>Reservar Vaga</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
@@ -86,10 +86,10 @@ export default function RegisterSpotPage() {
           <Link href="/my-spots" passHref legacyBehavior>
              <Button variant="outline" size="icon" className="h-8 w-8">
                 <ArrowLeft className="h-4 w-4" />
-                <span className="sr-only">Back to My Spots</span>
+                <span className="sr-only">Voltar para Minhas Vagas</span>
               </Button>
           </Link>
-          <h1 className="text-xl font-semibold md:text-2xl">Register New Spot</h1>
+          <h1 className="text-xl font-semibold md:text-2xl">Cadastrar Nova Vaga</h1>
           <div className="ml-auto">
             <UserNav />
           </div>
@@ -99,7 +99,7 @@ export default function RegisterSpotPage() {
           <SpotRegistrationForm />
         </main>
         <footer className="border-t p-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Vaga Livre. All rights reserved.
+          © {new Date().getFullYear()} Vaga Livre. Todos os direitos reservados.
         </footer>
       </SidebarInset>
     </div>

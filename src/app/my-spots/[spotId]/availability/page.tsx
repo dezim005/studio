@@ -84,10 +84,10 @@ export default function ManageSpotAvailabilityPage() {
       <div className="flex min-h-screen w-full items-center justify-center p-4">
         <div className="text-center">
           <AlertTriangle className="mx-auto h-16 w-16 text-destructive mb-4" />
-          <h1 className="text-2xl font-bold">Spot Not Found</h1>
-          <p className="text-muted-foreground mb-6">The parking spot you are looking for does not exist or you do not have permission to view it.</p>
+          <h1 className="text-2xl font-bold">Vaga Não Encontrada</h1>
+          <p className="text-muted-foreground mb-6">A vaga de estacionamento que você está procurando não existe ou você não tem permissão para visualizá-la.</p>
           <Link href="/my-spots" passHref legacyBehavior>
-            <Button><ArrowLeft className="mr-2 h-4 w-4"/>Go Back to My Spots</Button>
+            <Button><ArrowLeft className="mr-2 h-4 w-4"/>Voltar para Minhas Vagas</Button>
           </Link>
         </div>
       </div>
@@ -107,25 +107,25 @@ export default function ManageSpotAvailabilityPage() {
           <SidebarMenu>
             <SidebarMenuItem>
               <Link href="/" legacyBehavior passHref>
-                <SidebarMenuButton tooltip="Dashboard">
+                <SidebarMenuButton tooltip="Painel">
                   <LayoutDashboard />
-                  <span>Dashboard</span>
+                  <span>Painel</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <Link href="/my-spots" legacyBehavior passHref>
-                <SidebarMenuButton isActive tooltip="My Spots">
+                <SidebarMenuButton isActive tooltip="Minhas Vagas">
                   <ParkingSquare />
-                  <span>My Spots</span>
+                  <span>Minhas Vagas</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <Link href="/reservations" legacyBehavior passHref>
-                <SidebarMenuButton tooltip="Reserve a Spot">
+                <SidebarMenuButton tooltip="Reservar Vaga">
                   <CalendarCheck />
-                  <span>Reserve a Spot</span>
+                  <span>Reservar Vaga</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
@@ -139,10 +139,10 @@ export default function ManageSpotAvailabilityPage() {
           <Link href="/my-spots" passHref legacyBehavior>
              <Button variant="outline" size="icon" className="h-8 w-8">
                 <ArrowLeft className="h-4 w-4" />
-                <span className="sr-only">Back to My Spots</span>
+                <span className="sr-only">Voltar para Minhas Vagas</span>
               </Button>
           </Link>
-          <h1 className="text-xl font-semibold md:text-2xl truncate">Manage Availability: Spot {spot.number}</h1>
+          <h1 className="text-xl font-semibold md:text-2xl truncate">Gerenciar Disponibilidade: Vaga {spot.number}</h1>
           <div className="ml-auto">
             <UserNav />
           </div>
@@ -152,7 +152,7 @@ export default function ManageSpotAvailabilityPage() {
           <SpotAvailabilityCalendar spot={spot} />
         </main>
         <footer className="border-t p-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Vaga Livre. All rights reserved.
+          © {new Date().getFullYear()} Vaga Livre. Todos os direitos reservados.
         </footer>
       </SidebarInset>
     </div>

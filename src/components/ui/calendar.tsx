@@ -1,8 +1,10 @@
+
 "use client"
 
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { DayPicker } from "react-day-picker"
+import { ptBR } from 'date-fns/locale';
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
@@ -13,6 +15,7 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
+  locale = ptBR, // Default to Brazilian Portuguese
   ...props
 }: CalendarProps) {
   return (
@@ -61,6 +64,7 @@ function Calendar({
           <ChevronRight className={cn("h-4 w-4", className)} {...props} />
         ),
       }}
+      locale={locale}
       {...props}
     />
   )

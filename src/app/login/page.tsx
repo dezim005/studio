@@ -23,8 +23,8 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
 const loginFormSchema = z.object({
-  email: z.string().email("Invalid email address").min(1, "Email is required"),
-  password: z.string().min(6, "Password must be at least 6 characters").min(1, "Password is required"),
+  email: z.string().email("Endereço de email inválido").min(1, "Email é obrigatório"),
+  password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres").min(1, "Senha é obrigatória"),
 });
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
@@ -44,21 +44,17 @@ export default function LoginPage() {
 
   React.useEffect(() => {
     if (!isAuthLoading && isAuthenticated) {
-      router.push("/"); // Redirect to dashboard if already logged in
+      router.push("/"); // Redirecionar para o painel se já estiver logado
     }
   }, [isAuthenticated, isAuthLoading, router]);
 
   async function onSubmit(data: LoginFormValues) {
     setIsSubmitting(true);
     try {
-      // In a real app, the name might come from user profile after email/pass auth
-      // For this prototype, we'll use a default or derive it if needed.
       await login({ email: data.email });
-      // Successful login will redirect via AuthContext's login method
     } catch (error) {
-      console.error("Login failed:", error);
-      // Handle login errors (e.g., display a toast message)
-      form.setError("root", { type: "manual", message: "Login failed. Please check your credentials."})
+      console.error("Login falhou:", error);
+      form.setError("root", { type: "manual", message: "Login falhou. Por favor, verifique suas credenciais."})
     } finally {
       setIsSubmitting(false);
     }
@@ -79,8 +75,8 @@ export default function LoginPage() {
       </div>
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader>
-          <CardTitle className="text-2xl">Welcome Back!</CardTitle>
-          <CardDescription>Enter your credentials to access Vaga Livre.</CardDescription>
+          <CardTitle className="text-2xl">Bem-vindo(a) de Volta!</CardTitle>
+          <CardDescription>Insira suas credenciais para acessar o Vaga Livre.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -92,7 +88,7 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="user@example.com" {...field} />
+                      <Input type="email" placeholder="usuario@exemplo.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -103,7 +99,7 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>Senha</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="••••••••" {...field} />
                     </FormControl>
@@ -116,14 +112,14 @@ export default function LoginPage() {
               )}
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                {isSubmitting ? "Logging in..." : "Login"}
+                {isSubmitting ? "Entrando..." : "Entrar"}
               </Button>
             </form>
           </Form>
         </CardContent>
       </Card>
       <p className="mt-8 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} Vaga Livre. All rights reserved.
+        © {new Date().getFullYear()} Vaga Livre. Todos os direitos reservados.
       </p>
     </div>
   );

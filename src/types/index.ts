@@ -33,7 +33,7 @@ export interface User {
   name: string;
   email: string;
   password?: string; // Adicionado para o processo de registro/login
-  role: 'resident' | 'manager';
+  role: 'resident' | 'manager'; // Papel do usuário: morador ou síndico
   avatarUrl?: string;
 }
 

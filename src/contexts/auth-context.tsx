@@ -100,17 +100,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: false, message: "Este email já está cadastrado." };
     }
 
+    let role: 'resident' | 'manager' = 'resident';
+    if (registeredUsers.length === 0) {
+      role = 'manager'; // O primeiro usuário registrado é o síndico/manager
+    }
+
     const newUser: User = {
       id: `user${Date.now()}`, // Gerar ID simples
       name: data.name,
       email: data.email,
       password: data.password, // Lembre-se: NÃO FAÇA ISSO EM PRODUÇÃO!
-      role: "resident", // Função padrão para novos usuários
+      role: role, 
       avatarUrl: `https://placehold.co/40x40.png?text=${data.name[0].toUpperCase()}`, // Avatar placeholder
     };
 
     saveRegisteredUsers([...registeredUsers, newUser]);
-    return { success: true, message: "Cadastro realizado com sucesso! Você pode fazer login agora." };
+    const roleMessage = role === 'manager' ? "Você foi registrado como Síndico." : "Você foi registrado como Morador.";
+    return { success: true, message: `Cadastro realizado com sucesso! ${roleMessage} Você pode fazer login agora.` };
   };
 
   const logout = () => {

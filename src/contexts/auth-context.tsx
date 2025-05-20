@@ -14,6 +14,7 @@ interface AuthContextType {
   login: (data: Pick<User, "email" | "password">) => Promise<boolean>;
   logout: () => void;
   register: (data: Pick<User, "name" | "email" | "password">) => Promise<{ success: boolean; message: string }>;
+  updateUserProfile: (data: Partial<User>) => Promise<{ success: boolean; message: string }>;
   setIsAuthenticated: Dispatch<SetStateAction<boolean>>;
   setUser: Dispatch<SetStateAction<User | null>>;
 }
@@ -66,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = async (data: Pick<User, "email" | "password">): Promise<boolean> => {
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simular atraso da API
+    await new Promise(resolve => setTimeout(resolve, 500)); 
     const registeredUsers = getRegisteredUsers();
     const foundUser = registeredUsers.find(
       (u) => u.email === data.email && u.password === data.password
@@ -93,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const register = async (data: Pick<User, "name" | "email" | "password">): Promise<{ success: boolean; message: string }> => {
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simular atraso da API
+    await new Promise(resolve => setTimeout(resolve, 500)); 
     const registeredUsers = getRegisteredUsers();
     
     if (registeredUsers.find((u) => u.email === data.email)) {
@@ -102,22 +103,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     let role: 'resident' | 'manager' = 'resident';
     if (registeredUsers.length === 0) {
-      role = 'manager'; // O primeiro usuário registrado é o síndico/manager
+      role = 'manager'; 
     }
 
     const newUser: User = {
-      id: `user${Date.now()}`, // Gerar ID simples
+      id: `user${Date.now()}`,
       name: data.name,
       email: data.email,
-      password: data.password, // Lembre-se: NÃO FAÇA ISSO EM PRODUÇÃO!
+      password: data.password, 
       role: role, 
-      avatarUrl: `https://placehold.co/40x40.png?text=${data.name[0].toUpperCase()}`, // Avatar placeholder
+      avatarUrl: `https://placehold.co/40x40.png?text=${data.name[0]?.toUpperCase() || 'U'}`,
+      dateOfBirth: "",
+      apartment: "",
+      cpf: "",
+      phone: "",
+      description: "",
     };
 
     saveRegisteredUsers([...registeredUsers, newUser]);
     const roleMessage = role === 'manager' ? "Você foi registrado como Síndico." : "Você foi registrado como Morador.";
     return { success: true, message: `Cadastro realizado com sucesso! ${roleMessage} Você pode fazer login agora.` };
   };
+
+  const updateUserProfile = async (data: Partial<User>): Promise<{ success: boolean; message: string }> => {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    if (!user) {
+      return { success: false, message: "Usuário não autenticado." };
+    }
+
+    const updatedUser = { ...user, ...data };
+    setUser(updatedUser);
+
+    const registeredUsers = getRegisteredUsers();
+    const userIndex = registeredUsers.findIndex(u => u.id === user.id);
+    if (userIndex !== -1) {
+      registeredUsers[userIndex] = updatedUser;
+      saveRegisteredUsers(registeredUsers);
+    }
+
+    try {
+      localStorage.setItem(AUTH_STATE_KEY, JSON.stringify({ isAuthenticated: true, user: updatedUser }));
+    } catch (error) {
+      console.error("Falha ao salvar o estado de autenticação atualizado no localStorage", error);
+       return { success: false, message: "Erro ao salvar perfil. Tente novamente." };
+    }
+    
+    return { success: true, message: "Perfil atualizado com sucesso!" };
+  };
+
 
   const logout = () => {
     setIsAuthenticated(false);
@@ -131,7 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, isLoading, login, logout, register, setIsAuthenticated, setUser }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, isLoading, login, logout, register, updateUserProfile, setIsAuthenticated, setUser }}>
       {children}
     </AuthContext.Provider>
   );

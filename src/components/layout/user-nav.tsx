@@ -1,6 +1,7 @@
 
 "use client";
 
+import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -52,11 +53,13 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <UserIcon className="mr-2 h-4 w-4" />
-            <span>Perfil</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
+          <Link href="/profile" passHref legacyBehavior>
+            <DropdownMenuItem>
+              <UserIcon className="mr-2 h-4 w-4" />
+              <span>Perfil</span>
+            </DropdownMenuItem>
+          </Link>
+          <DropdownMenuItem disabled>
             <Settings className="mr-2 h-4 w-4" />
             <span>Configurações</span>
           </DropdownMenuItem>

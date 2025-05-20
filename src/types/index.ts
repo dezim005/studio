@@ -32,8 +32,12 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  password?: string; // Adicionado para o processo de registro/login
-  role: 'resident' | 'manager'; // Papel do usuário: morador ou síndico
+  password?: string; 
+  role: 'resident' | 'manager'; 
   avatarUrl?: string;
+  dateOfBirth?: string; 
+  apartment?: string;
+  cpf?: string;
+  phone?: string;
+  description?: string;
 }
-

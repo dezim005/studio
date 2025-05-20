@@ -27,7 +27,7 @@ import { useAuth } from "@/contexts/auth-context";
 
 
 export default function ManageSpotAvailabilityPage() {
-  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { isAuthenticated, user, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
   const params = useParams();
   const spotId = params.spotId as string;
@@ -41,23 +41,21 @@ export default function ManageSpotAvailabilityPage() {
   }, [isAuthenticated, isAuthLoading, router]);
 
   React.useEffect(() => {
-    if (isAuthenticated && spotId) {
+    if (isAuthenticated && user && spotId) {
       const foundSpot = getSpotById(spotId);
-      setTimeout(() => setSpot(foundSpot || null), 500);
+      if (foundSpot && user.role === 'resident' && foundSpot.ownerId !== user.id) {
+        setSpot(null); // Resident cannot manage a spot they don't own
+      } else {
+        setTimeout(() => setSpot(foundSpot || null), 500); // Simulate loading
+      }
+    } else if (!isAuthenticated && !isAuthLoading) {
+       setSpot(null); // Should not happen if auth guard works, but safety
     }
-  }, [spotId, isAuthenticated]);
+  }, [spotId, isAuthenticated, user, isAuthLoading]);
 
-  if (isAuthLoading || !isAuthenticated) {
+  if (isAuthLoading || !isAuthenticated || user === null || spot === undefined) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (spot === undefined) { // Spot data is loading
-    return (
-       <div className="flex min-h-screen w-full">
+      <div className="flex min-h-screen w-full">
          <Sidebar collapsible="icon" variant="sidebar" className="border-r">
           <SidebarHeader className="p-4">
             <div className="flex items-center justify-between"> <Logo /> {!isMobile && <SidebarTrigger />} </div>
@@ -79,7 +77,7 @@ export default function ManageSpotAvailabilityPage() {
     );
   }
   
-  if (spot === null) { // Spot not found
+  if (spot === null) { 
      return (
       <div className="flex min-h-screen w-full items-center justify-center p-4">
         <div className="text-center">

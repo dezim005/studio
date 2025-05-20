@@ -36,7 +36,7 @@ export default function MySpotsPage() {
     }
   }, [isAuthenticated, isAuthLoading, router]);
 
-  if (isAuthLoading || !isAuthenticated) {
+  if (isAuthLoading || !isAuthenticated || !user) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -44,7 +44,9 @@ export default function MySpotsPage() {
     );
   }
   
-  const mySpots = user ? mockParkingSpots.filter(spot => spot.ownerId === user.id) : [];
+  const spotsToDisplay = user.role === 'manager'
+    ? mockParkingSpots // Manager sees all spots
+    : mockParkingSpots.filter(spot => spot.ownerId === user.id); // Resident sees only their spots
 
   return (
     <div className="flex min-h-screen w-full">
@@ -88,7 +90,9 @@ export default function MySpotsPage() {
       <SidebarInset className="flex flex-col">
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
           {isMobile && <SidebarTrigger />}
-          <h1 className="text-xl font-semibold md:text-2xl">Minhas Vagas de Estacionamento</h1>
+          <h1 className="text-xl font-semibold md:text-2xl">
+            {user.role === 'manager' ? "Todas as Vagas Cadastradas" : "Minhas Vagas de Estacionamento"}
+          </h1>
           <div className="ml-auto flex items-center gap-4">
             <Link href="/my-spots/register" passHref legacyBehavior>
               <Button>
@@ -102,23 +106,35 @@ export default function MySpotsPage() {
         <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
           <Card className="shadow-md">
             <CardHeader>
-              <CardTitle className="text-2xl">Gerencie Suas Vagas</CardTitle>
-              <CardDescription>Visualize, edite a disponibilidade e gerencie suas vagas de estacionamento cadastradas.</CardDescription>
+              <CardTitle className="text-2xl">
+                {user.role === 'manager' ? "Gerenciar Vagas do Condomínio" : "Gerencie Suas Vagas"}
+              </CardTitle>
+              <CardDescription>
+                {user.role === 'manager' 
+                  ? "Visualize e gerencie todas as vagas de estacionamento cadastradas no sistema."
+                  : "Visualize, edite a disponibilidade e gerencie suas vagas de estacionamento cadastradas."
+                }
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              {mySpots.length > 0 ? (
+              {spotsToDisplay.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {mySpots.map((spot) => (
+                  {spotsToDisplay.map((spot) => (
                     <ParkingSpotCard key={spot.id} spot={spot} showActions />
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-10">
                    <ParkingSquare className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-lg font-medium text-muted-foreground">Você ainda não cadastrou nenhuma vaga.</p>
+                  <p className="text-lg font-medium text-muted-foreground">
+                    {user.role === 'manager' 
+                      ? "Nenhuma vaga cadastrada no sistema ainda." 
+                      : "Você ainda não cadastrou nenhuma vaga."}
+                  </p>
                   <Link href="/my-spots/register" passHref legacyBehavior>
                     <Button className="mt-4">
-                      <PlusCircle className="mr-2 h-4 w-4" /> Cadastrar Sua Primeira Vaga
+                      <PlusCircle className="mr-2 h-4 w-4" /> 
+                      {user.role === 'manager' ? "Cadastrar Primeira Vaga" : "Cadastrar Sua Primeira Vaga"}
                     </Button>
                   </Link>
                 </div>

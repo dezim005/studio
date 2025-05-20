@@ -32,6 +32,8 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  password?: string; // Adicionado para o processo de registro/login
   role: 'resident' | 'manager';
   avatarUrl?: string;
 }
+

@@ -14,7 +14,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -28,10 +27,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import type { ParkingSpot, AvailabilitySlot } from "@/types";
-import { addDays, format, parseISO, startOfDay } from "date-fns"; // Adicionado startOfDay
+import { addDays, format, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from 'date-fns/locale';
 import type { DateRange } from "react-day-picker";
-import { CalendarDays, Clock, Repeat, Trash2, PlusCircle, Loader2 } from "lucide-react"; // Adicionado Loader2
+import { CalendarDays, Repeat, Trash2, PlusCircle, Loader2 } from "lucide-react";
 
 // Schema para um único slot de disponibilidade no formulário
 const formAvailabilitySlotSchema = z.object({
@@ -40,25 +39,10 @@ const formAvailabilitySlotSchema = z.object({
     from: z.date({ required_error: "Data de início é obrigatória." }),
     to: z.date().optional(),
   }),
-  startTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Formato de hora inválido (HH:MM)"),
-  endTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Formato de hora inválido (HH:MM)"),
   isRecurring: z.boolean().default(false),
   recurrencePattern: z.enum(["daily", "weekly", "monthly"]).optional(),
-}).refine(data => {
-  const fromDateTime = new Date(data.dateRange.from);
-  const [startH, startM] = data.startTime.split(':').map(Number);
-  fromDateTime.setHours(startH, startM, 0, 0);
-
-  const toDate = data.dateRange.to || data.dateRange.from;
-  const endDateTime = new Date(toDate);
-  const [endH, endM] = data.endTime.split(':').map(Number);
-  endDateTime.setHours(endH, endM, 0, 0);
-  
-  return endDateTime > fromDateTime;
-}, {
-  message: "A data/hora final deve ser posterior à data/hora inicial.",
-  path: ["endTime"], 
 });
+// Removida a validação de tempo e a checagem de endTime > startTime baseada em horas
 
 
 const formSchema = z.object({
@@ -69,46 +53,45 @@ type AvailabilityFormValues = z.infer<typeof formSchema>;
 
 interface SpotAvailabilityCalendarProps {
   spot: ParkingSpot;
-  onSave: (availabilitySlots: AvailabilitySlot[]) => Promise<void>; // Função para salvar
+  onSave: (availabilitySlots: AvailabilitySlot[]) => Promise<void>;
 }
 
 export function SpotAvailabilityCalendar({ spot, onSave }: SpotAvailabilityCalendarProps) {
   const { toast } = useToast();
   const [selectedDateRange, setSelectedDateRange] = React.useState<DateRange | undefined>({
-    from: startOfDay(new Date()), // Garante que 'from' começa no início do dia
-    to: startOfDay(addDays(new Date(), 0)), // Garante que 'to' começa no início do dia
+    from: startOfDay(new Date()),
+    to: startOfDay(addDays(new Date(), 0)),
   });
   const [isSubmittingGlobal, setIsSubmittingGlobal] = React.useState(false);
-
 
   const form = useForm<AvailabilityFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       slots: spot.availability?.map(slot => ({
         id: slot.id,
-        dateRange: { from: startOfDay(new Date(slot.startTime)), to: startOfDay(new Date(slot.endTime)) }, 
-        startTime: format(new Date(slot.startTime), "HH:mm"),
-        endTime: format(new Date(slot.endTime), "HH:mm"),
+        dateRange: { 
+          from: startOfDay(new Date(slot.startTime)), 
+          to: startOfDay(new Date(slot.endTime)) // endTime do slot já é endOfDay
+        },
         isRecurring: slot.isRecurring,
         recurrencePattern: slot.recurrencePattern,
       })) || [],
     },
   });
   
-  // Atualizar form quando o spot mudar (ex: após salvar e receber novo spot)
   React.useEffect(() => {
     form.reset({
       slots: spot.availability?.map(slot => ({
         id: slot.id,
-        dateRange: { from: startOfDay(new Date(slot.startTime)), to: startOfDay(new Date(slot.endTime)) },
-        startTime: format(new Date(slot.startTime), "HH:mm"),
-        endTime: format(new Date(slot.endTime), "HH:mm"),
+        dateRange: { 
+          from: startOfDay(new Date(slot.startTime)), 
+          to: startOfDay(new Date(slot.endTime)) // endTime do slot já é endOfDay
+        },
         isRecurring: slot.isRecurring,
         recurrencePattern: slot.recurrencePattern,
       })) || [],
     });
   }, [spot, form]);
-
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -119,28 +102,22 @@ export function SpotAvailabilityCalendar({ spot, onSave }: SpotAvailabilityCalen
 
   async function onSubmit(data: AvailabilityFormValues) {
     setIsSubmittingGlobal(true);
-    // Mapear dados do formulário para o tipo AvailabilitySlot esperado pelo backend/serviço
     const processedSlots: AvailabilitySlot[] = data.slots.map((formSlot, index) => {
-      const fromDate = formSlot.dateRange.from;
-      const toDate = formSlot.dateRange.to || formSlot.dateRange.from; // Se 'to' não existir, usa 'from'
-      const [startH, startM] = formSlot.startTime.split(':').map(Number);
-      const [endH, endM] = formSlot.endTime.split(':').map(Number);
-
-      const startTime = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate(), startH, startM);
-      const endTime = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate(), endH, endM);
+      const fromDate = startOfDay(formSlot.dateRange.from);
+      const toDate = endOfDay(formSlot.dateRange.to || formSlot.dateRange.from); 
       
       return {
-        id: formSlot.id || `new-${Date.now()}-${index}`, // Gera ID para novos slots
+        id: formSlot.id || `new-${Date.now()}-${index}`,
         spotId: spot.id,
-        startTime: startTime,
-        endTime: endTime,
+        startTime: fromDate, // startTime é startOfDay do primeiro dia
+        endTime: toDate,     // endTime é endOfDay do último dia
         isRecurring: formSlot.isRecurring,
         recurrencePattern: formSlot.isRecurring ? formSlot.recurrencePattern : undefined,
       };
     });
     
-    await onSave(processedSlots); // Chama a função onSave passada como prop
-    setEditingSlotIndex(null); // Sai do modo de edição após salvar globalmente
+    await onSave(processedSlots);
+    setEditingSlotIndex(null);
     setIsSubmittingGlobal(false);
   }
   
@@ -150,13 +127,11 @@ export function SpotAvailabilityCalendar({ spot, onSave }: SpotAvailabilityCalen
       return;
     }
     const newSlotBase = {
-      id: `temp-${Date.now()}`, // ID temporário para o array field
+      id: `temp-${Date.now()}`,
       dateRange: { 
         from: startOfDay(selectedDateRange.from), 
         to: selectedDateRange.to ? startOfDay(selectedDateRange.to) : startOfDay(selectedDateRange.from) 
       },
-      startTime: "09:00",
-      endTime: "17:00",
       isRecurring: false,
       recurrencePattern: undefined,
     };
@@ -176,8 +151,6 @@ export function SpotAvailabilityCalendar({ spot, onSave }: SpotAvailabilityCalen
   };
 
   const handleSaveEditingSlot = (index: number) => {
-    // Apenas valida o slot atual e o mantém no formulário, não salva globalmente ainda.
-    // O salvamento global ocorre com o botão "Salvar Todas as Alterações".
     form.trigger(`slots.${index}`).then(isValid => {
       if (isValid) {
         setEditingSlotIndex(null);
@@ -194,11 +167,10 @@ export function SpotAvailabilityCalendar({ spot, onSave }: SpotAvailabilityCalen
       if (newDateRange.to) {
         form.setValue(`slots.${index}.dateRange.to`, startOfDay(newDateRange.to), { shouldValidate: true });
       } else {
-         form.setValue(`slots.${index}.dateRange.to`, undefined, { shouldValidate: true }); // ou from
+         form.setValue(`slots.${index}.dateRange.to`, undefined, { shouldValidate: true });
       }
     }
   };
-
 
   return (
     <Card className="w-full max-w-4xl mx-auto shadow-xl">
@@ -208,7 +180,7 @@ export function SpotAvailabilityCalendar({ spot, onSave }: SpotAvailabilityCalen
           Gerenciar Disponibilidade para Vaga {spot.number}
         </CardTitle>
         <CardDescription>
-          Defina quando sua vaga de estacionamento está disponível para reservas. Selecione datas no calendário e adicione intervalos de tempo.
+          Defina quais dias sua vaga de estacionamento está disponível para reservas. Selecione datas no calendário e adicione intervalos.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -226,14 +198,14 @@ export function SpotAvailabilityCalendar({ spot, onSave }: SpotAvailabilityCalen
                   locale={ptBR}
                 />
                 <Button type="button" onClick={handleAddNewSlot} className="w-full mt-4" disabled={editingSlotIndex !== null}>
-                  <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Novo Intervalo
+                  <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Novo Intervalo de Dias
                 </Button>
               </div>
 
               <div className="md:col-span-2">
-                <h3 className="text-lg font-semibold mb-3">Intervalos de Disponibilidade</h3>
+                <h3 className="text-lg font-semibold mb-3">Dias Disponíveis</h3>
                 {fields.length === 0 && (
-                  <p className="text-muted-foreground text-sm">Nenhum intervalo definido. Selecione as datas e clique em "Adicionar Novo Intervalo".</p>
+                  <p className="text-muted-foreground text-sm">Nenhum intervalo definido. Selecione as datas e clique em "Adicionar Novo Intervalo de Dias".</p>
                 )}
                 
                 <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
@@ -250,30 +222,7 @@ export function SpotAvailabilityCalendar({ spot, onSave }: SpotAvailabilityCalen
                     
                       {editingSlotIndex === index ? (
                         <>
-                          <div className="grid grid-cols-2 gap-4 mb-2">
-                            <FormField
-                              control={form.control}
-                              name={`slots.${index}.startTime`}
-                              render={({ field: timeField }) => (
-                                <FormItem>
-                                  <FormLabel className="text-xs">Hora de Início</FormLabel>
-                                  <FormControl><Input type="time" {...timeField} /></FormControl>
-                                  <FormMessage className="text-xs" />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name={`slots.${index}.endTime`}
-                              render={({ field: timeField }) => (
-                                <FormItem>
-                                  <FormLabel className="text-xs">Hora de Término</FormLabel>
-                                  <FormControl><Input type="time" {...timeField} /></FormControl>
-                                  <FormMessage className="text-xs" />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
+                          {/* Campos de Hora Removidos */}
                           <FormField
                             control={form.control}
                             name={`slots.${index}.isRecurring`}
@@ -314,10 +263,7 @@ export function SpotAvailabilityCalendar({ spot, onSave }: SpotAvailabilityCalen
                         </>
                       ) : (
                         <>
-                          <div className="flex items-center space-x-2 text-sm mb-1">
-                            <Clock className="h-4 w-4 text-muted-foreground" />
-                            <span>{form.getValues(`slots.${index}.startTime`)} - {form.getValues(`slots.${index}.endTime`)}</span>
-                          </div>
+                          {/* Exibição de Horas Removida */}
                           {form.getValues(`slots.${index}.isRecurring`) && (
                              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                                <Repeat className="h-4 w-4" />
@@ -362,3 +308,5 @@ export function SpotAvailabilityCalendar({ spot, onSave }: SpotAvailabilityCalen
     </Card>
   );
 }
+
+    

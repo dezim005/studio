@@ -3,7 +3,7 @@
 
 import type { Reservation, ParkingSpot, AvailabilitySlot } from "@/types";
 import { getSpotById } from "./parking-spot-service"; 
-import { startOfDay, endOfDay } from "date-fns";
+import { startOfDay, endOfDay, isEqual } from "date-fns"; // Adicionado isEqual
 
 const RESERVATIONS_STORAGE_KEY = "vagaLivreReservations";
 
@@ -26,8 +26,8 @@ export function getAllReservations(): Reservation[] {
     if (storedReservations) {
       return JSON.parse(storedReservations).map((res: any) => ({
         ...res,
-        startTime: new Date(res.startTime),
-        endTime: new Date(res.endTime),
+        startTime: new Date(res.startTime), // Já devem ser startOfDay
+        endTime: new Date(res.endTime),     // Já devem ser endOfDay
       }));
     }
     return [];
@@ -42,9 +42,11 @@ export function getReservationsBySpotId(spotId: string): Reservation[] {
   return allReservations.filter(res => res.spotId === spotId);
 }
 
+// Verifica se o período de reserva solicitado (dias inteiros) está completamente contido
+// dentro de um dos slots de disponibilidade (que agora também representam dias inteiros).
 function isWithinAvailabilitySlot(
-  requestedReservationStart: Date, // Espera-se startOfDay
-  requestedReservationEnd: Date,   // Espera-se endOfDay
+  requestedReservationStart: Date, // startOfDay do primeiro dia da reserva
+  requestedReservationEnd: Date,   // endOfDay do último dia da reserva
   availabilitySlots: AvailabilitySlot[] | undefined
 ): boolean {
   if (!availabilitySlots || availabilitySlots.length === 0) {
@@ -52,10 +54,11 @@ function isWithinAvailabilitySlot(
   }
 
   return availabilitySlots.some(slot => {
-    const slotStart = new Date(slot.startTime); // Hora exata do slot
-    const slotEnd = new Date(slot.endTime);     // Hora exata do slot
+    // startTime e endTime do slot já são startOfDay e endOfDay do período de disponibilidade
+    const slotStart = new Date(slot.startTime); 
+    const slotEnd = new Date(slot.endTime);     
 
-    // O slot de disponibilidade deve cobrir completamente o período da reserva (dias inteiros).
+    // A disponibilidade do slot deve cobrir completamente o período da reserva.
     return slotStart <= requestedReservationStart && slotEnd >= requestedReservationEnd;
   });
 }
@@ -73,41 +76,46 @@ export async function addReservation(
   }
 
   if (!spot.availability || spot.availability.length === 0) {
-    return { success: false, message: "Esta vaga não possui horários de disponibilidade cadastrados." };
+    return { success: false, message: "Esta vaga não possui dias de disponibilidade cadastrados." };
   }
   
-  // As datas da reserva já devem vir como startOfDay e endOfDay do AvailableSpotsList
+  // As datas da reserva já vêm como startOfDay e endOfDay do SpotReservationDialog/AvailableSpotsList
   const requestedStartTime = new Date(reservationData.startTime);
   const requestedEndTime = new Date(reservationData.endTime);
 
   if (isNaN(requestedStartTime.getTime()) || isNaN(requestedEndTime.getTime())) {
     return { success: false, message: "Datas da reserva inválidas." };
   }
-   if (requestedEndTime < requestedStartTime) { // Deve ser <= para um único dia, mas o endOfDay já cuida disso
+   // Para reserva de um único dia, startTime (startOfDay) será menor que endTime (endOfDay)
+   // Para múltiplos dias, startTime será menor. Se forem iguais, algo está errado, mas a UI deve prevenir.
+   if (requestedEndTime < requestedStartTime) { 
     return { success: false, message: "A data final da reserva deve ser posterior ou igual à data inicial." };
   }
 
   if (!isWithinAvailabilitySlot(requestedStartTime, requestedEndTime, spot.availability)) {
-    return { success: false, message: "O período solicitado não está disponível nos horários cadastrados para esta vaga. O slot de disponibilidade deve cobrir o dia inteiro." };
+    return { success: false, message: "O período solicitado não está disponível nos dias cadastrados para esta vaga." };
   }
 
   const existingReservationsForSpot = getReservationsBySpotId(reservationData.spotId);
   const conflict = existingReservationsForSpot.some(existingRes => {
-    const existingStartTime = new Date(existingRes.startTime);
-    const existingEndTime = new Date(existingRes.endTime);
-    return requestedStartTime < existingEndTime && requestedEndTime > existingStartTime;
+    const existingStartTime = new Date(existingRes.startTime); // é startOfDay
+    const existingEndTime = new Date(existingRes.endTime);     // é endOfDay
+    // Conflito se os intervalos de dias se sobrepõem
+    return requestedStartTime <= existingEndTime && requestedEndTime >= existingStartTime;
   });
 
   if (conflict) {
-    return { success: false, message: "Este período já está reservado para esta vaga." };
+    return { success: false, message: "Este período (ou parte dele) já está reservado para esta vaga." };
   }
 
   const allReservations = getAllReservations();
   const newReservation: Reservation = {
     id: `res-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-    ...reservationData, // startTime e endTime aqui já são os objetos Date corretos
+    ...reservationData, 
   };
 
   saveReservations([...allReservations, newReservation]);
   return { success: true, message: "Vaga reservada com sucesso!", reservation: newReservation };
 }
+
+    

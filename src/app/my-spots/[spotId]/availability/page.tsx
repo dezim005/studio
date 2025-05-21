@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast"; 
+import { cn } from "@/lib/utils";
 
 
 export default function ManageSpotAvailabilityPage() {
@@ -35,7 +36,7 @@ export default function ManageSpotAvailabilityPage() {
   const params = useParams();
   const spotId = params.spotId as string;
   const [spot, setSpot] = React.useState<ParkingSpot | null | undefined>(undefined);
-  const { isMobile } = useSidebar();
+  const { isMobile, state: sidebarState } = useSidebar();
   const { toast } = useToast(); 
 
   React.useEffect(() => {
@@ -85,8 +86,19 @@ export default function ManageSpotAvailabilityPage() {
     return (
       <div className="flex min-h-screen w-full">
          <Sidebar collapsible="icon" variant="sidebar" className="border-r">
-          <SidebarHeader className="p-4">
-            <div className="flex items-center justify-between"> <Logo /> {!isMobile && <SidebarTrigger />} </div>
+          <SidebarHeader className={cn(
+            "flex items-center", 
+            !isMobile && sidebarState === 'collapsed' ? "p-2 justify-center" : "p-4 justify-between",
+            isMobile && "p-4 justify-between"
+          )}>
+            {(!isMobile && sidebarState === 'collapsed') ? (
+              <SidebarTrigger />
+            ) : (
+              <>
+                <Logo />
+                {!isMobile && <SidebarTrigger />}
+              </>
+            )}
           </SidebarHeader>
           <SidebarContent> <SidebarMenu> {/* Skeleton Nav */} </SidebarMenu> </SidebarContent>
         </Sidebar>
@@ -125,11 +137,19 @@ export default function ManageSpotAvailabilityPage() {
   return (
     <div className="flex min-h-screen w-full">
       <Sidebar collapsible="icon" variant="sidebar" className="border-r">
-        <SidebarHeader className="p-4">
-          <div className="flex items-center justify-between">
-            <Logo />
-            {!isMobile && <SidebarTrigger />}
-          </div>
+        <SidebarHeader className={cn(
+          "flex items-center", 
+          !isMobile && sidebarState === 'collapsed' ? "p-2 justify-center" : "p-4 justify-between",
+          isMobile && "p-4 justify-between"
+        )}>
+          {(!isMobile && sidebarState === 'collapsed') ? (
+            <SidebarTrigger />
+          ) : (
+            <>
+              <Logo />
+              {!isMobile && <SidebarTrigger />}
+            </>
+          )}
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>

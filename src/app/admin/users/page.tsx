@@ -54,6 +54,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 const editUserSchema = z.object({
   name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres."),
@@ -80,7 +81,7 @@ export default function ManageUsersPage() {
   const { user: currentUser, isAuthenticated, isLoading: isAuthLoading, setUser: setAuthUser } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-  const { isMobile } = useSidebar();
+  const { isMobile, state: sidebarState } = useSidebar();
   const [allUsers, setAllUsers] = React.useState<User[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = React.useState(true);
   const [condominiums, setCondominiums] = React.useState<Condominium[]>([]);
@@ -203,11 +204,19 @@ export default function ManageUsersPage() {
   return (
     <div className="flex min-h-screen w-full">
       <Sidebar collapsible="icon" variant="sidebar" className="border-r">
-        <SidebarHeader className="p-4">
-          <div className="flex items-center justify-between">
-            <Logo />
-            {!isMobile && <SidebarTrigger />}
-          </div>
+        <SidebarHeader className={cn(
+          "flex items-center", 
+          !isMobile && sidebarState === 'collapsed' ? "p-2 justify-center" : "p-4 justify-between",
+          isMobile && "p-4 justify-between"
+        )}>
+          {(!isMobile && sidebarState === 'collapsed') ? (
+            <SidebarTrigger />
+          ) : (
+            <>
+              <Logo />
+              {!isMobile && <SidebarTrigger />}
+            </>
+          )}
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>

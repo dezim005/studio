@@ -28,6 +28,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 interface UserReservationDetails extends Reservation {
   spotDetails?: ParkingSpot;
@@ -36,7 +37,7 @@ interface UserReservationDetails extends Reservation {
 export default function MyReservationsPage() {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
-  const { isMobile } = useSidebar();
+  const { isMobile, state: sidebarState } = useSidebar();
 
   const [userReservations, setUserReservations] = React.useState<UserReservationDetails[]>([]);
   const [isLoadingReservations, setIsLoadingReservations] = React.useState(true);
@@ -74,11 +75,19 @@ export default function MyReservationsPage() {
   return (
     <div className="flex min-h-screen w-full">
       <Sidebar collapsible="icon" variant="sidebar" className="border-r">
-        <SidebarHeader className="p-4">
-          <div className="flex items-center justify-between">
-            <Logo />
-            {!isMobile && <SidebarTrigger />}
-          </div>
+        <SidebarHeader className={cn(
+          "flex items-center", 
+          !isMobile && sidebarState === 'collapsed' ? "p-2 justify-center" : "p-4 justify-between",
+          isMobile && "p-4 justify-between"
+        )}>
+          {(!isMobile && sidebarState === 'collapsed') ? (
+            <SidebarTrigger />
+          ) : (
+            <>
+              <Logo />
+              {!isMobile && <SidebarTrigger />}
+            </>
+          )}
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>

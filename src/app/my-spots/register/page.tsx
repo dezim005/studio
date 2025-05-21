@@ -23,11 +23,12 @@ import { LayoutDashboard, ParkingSquare, CalendarCheck, ArrowLeft, Loader2, Buil
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export default function RegisterSpotPage() {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth(); 
   const router = useRouter();
-  const { isMobile } = useSidebar();
+  const { isMobile, state: sidebarState } = useSidebar();
 
   React.useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
@@ -46,11 +47,19 @@ export default function RegisterSpotPage() {
   return (
     <div className="flex min-h-screen w-full">
       <Sidebar collapsible="icon" variant="sidebar" className="border-r">
-        <SidebarHeader className="p-4">
-          <div className="flex items-center justify-between">
-            <Logo />
-            {!isMobile && <SidebarTrigger />}
-          </div>
+       <SidebarHeader className={cn(
+          "flex items-center", 
+          !isMobile && sidebarState === 'collapsed' ? "p-2 justify-center" : "p-4 justify-between",
+          isMobile && "p-4 justify-between"
+        )}>
+          {(!isMobile && sidebarState === 'collapsed') ? (
+            <SidebarTrigger />
+          ) : (
+            <>
+              <Logo />
+              {!isMobile && <SidebarTrigger />}
+            </>
+          )}
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>

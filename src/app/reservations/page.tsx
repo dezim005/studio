@@ -26,12 +26,13 @@ import {
 import { LayoutDashboard, ParkingSquare, CalendarCheck, Loader2, Building, Users, Bookmark } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 
 export default function ReservationsPage() {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
-  const { isMobile } = useSidebar();
+  const { isMobile, state: sidebarState } = useSidebar();
   const [spots, setSpots] = React.useState<ParkingSpot[]>([]);
   const [isLoadingSpots, setIsLoadingSpots] = React.useState(true);
 
@@ -62,11 +63,19 @@ export default function ReservationsPage() {
   return (
      <div className="flex min-h-screen w-full">
       <Sidebar collapsible="icon" variant="sidebar" className="border-r">
-        <SidebarHeader className="p-4">
-          <div className="flex items-center justify-between">
-            <Logo />
-            {!isMobile && <SidebarTrigger />}
-          </div>
+        <SidebarHeader className={cn(
+          "flex items-center", 
+          !isMobile && sidebarState === 'collapsed' ? "p-2 justify-center" : "p-4 justify-between",
+          isMobile && "p-4 justify-between"
+        )}>
+          {(!isMobile && sidebarState === 'collapsed') ? (
+            <SidebarTrigger />
+          ) : (
+            <>
+              <Logo />
+              {!isMobile && <SidebarTrigger />}
+            </>
+          )}
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>

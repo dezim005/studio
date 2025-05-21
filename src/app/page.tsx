@@ -37,6 +37,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { startOfDay, endOfDay } from "date-fns"; 
+import { cn } from "@/lib/utils";
 
 export default function DashboardPage() {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
@@ -50,7 +51,7 @@ export default function DashboardPage() {
   const [filterAvailability, setFilterAvailability] = React.useState<string>("all"); 
   const [viewMode, setViewMode] = React.useState<"list" | "map">("list");
 
-  const { isMobile } = useSidebar();
+  const { isMobile, state: sidebarState } = useSidebar();
 
   React.useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
@@ -130,11 +131,19 @@ export default function DashboardPage() {
   return (
     <div className="flex min-h-screen w-full">
       <Sidebar collapsible="icon" variant="sidebar" className="border-r">
-        <SidebarHeader className="p-4">
-          <div className="flex items-center justify-between">
-            <Logo />
-            {!isMobile && <SidebarTrigger />}
-          </div>
+        <SidebarHeader className={cn(
+          "flex items-center", 
+          !isMobile && sidebarState === 'collapsed' ? "p-2 justify-center" : "p-4 justify-between",
+          isMobile && "p-4 justify-between"
+        )}>
+          {(!isMobile && sidebarState === 'collapsed') ? (
+            <SidebarTrigger />
+          ) : (
+            <>
+              <Logo />
+              {!isMobile && <SidebarTrigger />}
+            </>
+          )}
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>

@@ -27,11 +27,12 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export default function MySpotsPage() {
   const { isAuthenticated, user, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
-  const { isMobile } = useSidebar();
+  const { isMobile, state: sidebarState } = useSidebar();
   const [allSpots, setAllSpots] = React.useState<ParkingSpot[]>([]);
   const [allReservations, setAllReservations] = React.useState<Reservation[]>([]);
   const [isLoadingData, setIsLoadingData] = React.useState(true);
@@ -68,11 +69,19 @@ export default function MySpotsPage() {
   return (
     <div className="flex min-h-screen w-full">
       <Sidebar collapsible="icon" variant="sidebar" className="border-r">
-        <SidebarHeader className="p-4">
-          <div className="flex items-center justify-between">
-            <Logo />
-            {!isMobile && <SidebarTrigger />}
-          </div>
+        <SidebarHeader className={cn(
+          "flex items-center", 
+          !isMobile && sidebarState === 'collapsed' ? "p-2 justify-center" : "p-4 justify-between",
+          isMobile && "p-4 justify-between"
+        )}>
+          {(!isMobile && sidebarState === 'collapsed') ? (
+            <SidebarTrigger />
+          ) : (
+            <>
+              <Logo />
+              {!isMobile && <SidebarTrigger />}
+            </>
+          )}
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>

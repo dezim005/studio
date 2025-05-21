@@ -39,6 +39,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { addCondominium } from "@/lib/condominium-service";
+import { cn } from "@/lib/utils";
 
 const condominiumSchema = z.object({
   name: z.string().min(3, "O nome do condomínio deve ter pelo menos 3 caracteres."),
@@ -51,7 +52,7 @@ export default function RegisterCondominiumPage() {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-  const { isMobile } = useSidebar();
+  const { isMobile, state: sidebarState } = useSidebar();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const form = useForm<CondominiumFormValues>({
@@ -104,11 +105,19 @@ export default function RegisterCondominiumPage() {
   return (
     <div className="flex min-h-screen w-full">
       <Sidebar collapsible="icon" variant="sidebar" className="border-r">
-        <SidebarHeader className="p-4">
-          <div className="flex items-center justify-between">
-            <Logo />
-            {!isMobile && <SidebarTrigger />}
-          </div>
+        <SidebarHeader className={cn(
+          "flex items-center", 
+          !isMobile && sidebarState === 'collapsed' ? "p-2 justify-center" : "p-4 justify-between",
+          isMobile && "p-4 justify-between"
+        )}>
+          {(!isMobile && sidebarState === 'collapsed') ? (
+            <SidebarTrigger />
+          ) : (
+            <>
+              <Logo />
+              {!isMobile && <SidebarTrigger />}
+            </>
+          )}
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>

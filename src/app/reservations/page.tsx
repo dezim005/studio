@@ -4,8 +4,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { AvailableSpotsList, type ReservationDetails } from "@/components/parking/available-spots-list";
-import { getParkingSpots } from "@/lib/parking-spot-service"; // Atualizado
-import type { ParkingSpot } from "@/types"; // Importar ParkingSpot
+import { getParkingSpots } from "@/lib/parking-spot-service"; 
+import type { ParkingSpot } from "@/types"; 
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
@@ -26,11 +26,13 @@ import {
 import { LayoutDashboard, ParkingSquare, CalendarCheck, Loader2, Building, Users } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
+// Importar getAllReservations para passar para AvailableSpotsList se necessário,
+// mas AvailableSpotsList já está buscando internamente.
 
 export default function ReservationsPage() {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
-  const { toast } = useToast();
+  // const { toast } = useToast(); // toast é usado dentro de AvailableSpotsList
   const { isMobile } = useSidebar();
   const [spots, setSpots] = React.useState<ParkingSpot[]>([]);
   const [isLoadingSpots, setIsLoadingSpots] = React.useState(true);
@@ -44,7 +46,7 @@ export default function ReservationsPage() {
   React.useEffect(() => {
     if (isAuthenticated) {
       setIsLoadingSpots(true);
-      const spotsFromService = getParkingSpots();
+      const spotsFromService = getParkingSpots(); // Busca inicial
       setSpots(spotsFromService);
       setIsLoadingSpots(false);
     }
@@ -58,17 +60,11 @@ export default function ReservationsPage() {
     );
   }
 
-  const handleReserveSpot = (spotId: string, details: ReservationDetails) => {
-    console.log("Reservando vaga:", spotId, "Detalhes:", details);
-    const fromDate = details.dateRange.from?.toLocaleDateString('pt-BR') || 'Data de início não selecionada';
-    const toDate = details.dateRange.to?.toLocaleDateString('pt-BR') || fromDate;
-
-    toast({
-      title: "Reserva Solicitada",
-      description: `Solicitação para reservar a vaga ${spotId} de ${fromDate} até ${toDate} foi enviada.`,
-      variant: "default"
-    });
-  };
+  // A lógica de reserva agora está encapsulada em AvailableSpotsList e reservation-service
+  // const handleReserveSpot = (spotId: string, details: ReservationDetails) => {
+  //   console.log("Reservando vaga:", spotId, "Detalhes:", details);
+  //   // ... lógica movida ...
+  // };
 
   return (
      <div className="flex min-h-screen w-full">
@@ -153,7 +149,9 @@ export default function ReservationsPage() {
                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
                  </div>
               ) : (
-                <AvailableSpotsList spots={spots} onReserveSpot={handleReserveSpot} />
+                // Passar os spots buscados para AvailableSpotsList.
+                // AvailableSpotsList cuidará de sua própria lógica de busca de reservas.
+                <AvailableSpotsList spots={spots} />
               )}
             </CardContent>
           </Card>
@@ -165,3 +163,4 @@ export default function ReservationsPage() {
     </div>
   );
 }
+

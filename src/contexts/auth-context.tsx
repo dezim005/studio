@@ -102,15 +102,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     let role: 'resident' | 'manager' = 'resident';
-    if (registeredUsers.length === 0) {
+    const isFirstUser = registeredUsers.length === 0;
+    if (isFirstUser) {
       role = 'manager';
+    }
+
+    if (role === 'resident' && !data.condominiumId) {
+      return { success: false, message: "Moradores devem selecionar um condomínio. Se nenhum estiver disponível, peça ao síndico para cadastrar." };
     }
 
     const newUser: User = {
       id: `user-${Date.now()}`,
       name: data.name,
       email: data.email,
-      password: data.password,
+      password: data.password, // Lembre-se: em produção, senhas DEVEM ser hasheadas.
       role: role,
       avatarUrl: `https://placehold.co/40x40.png?text=${data.name[0]?.toUpperCase() || 'U'}`,
       dateOfBirth: "",
@@ -118,7 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       cpf: "",
       phone: "",
       description: "",
-      condominiumId: role === 'resident' ? data.condominiumId : undefined, // Só atribui condominiumId se for morador
+      condominiumId: role === 'resident' ? data.condominiumId : undefined,
     };
 
     saveRegisteredUsers([...registeredUsers, newUser]);
@@ -178,3 +183,5 @@ export function useAuth() {
   }
   return context;
 }
+
+    

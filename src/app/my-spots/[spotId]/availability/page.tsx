@@ -22,7 +22,7 @@ import {
   SidebarGroup,
   SidebarGroupLabel
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, ParkingSquare, CalendarCheck, ArrowLeft, AlertTriangle, Loader2, Building, Users, Bookmark } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, ArrowLeft, AlertTriangle, Loader2, Building, Users, Bookmark, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth-context";
@@ -204,6 +204,14 @@ export default function ManageSpotAvailabilityPage() {
                     </SidebarMenuButton>
                   </Link>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <Link href="/admin/rental-history" legacyBehavior passHref>
+                    <SidebarMenuButton tooltip="Histórico de Aluguéis">
+                      <History />
+                      <span>Histórico de Aluguéis</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
               </SidebarGroup>
             )}
           </SidebarMenu>
@@ -237,3 +245,5 @@ export default function ManageSpotAvailabilityPage() {
     </div>
   );
 }
+
+    

@@ -9,7 +9,7 @@ import { ParkingSpotCard } from "@/components/parking/parking-spot-card";
 import type { ParkingSpot, Reservation } from "@/types";
 import { getParkingSpots } from "@/lib/parking-spot-service"; 
 import { getAllReservations } from "@/lib/reservation-service"; 
-import { PlusCircle, ParkingSquare, LayoutDashboard, CalendarCheck, Loader2, Building, Users, Bookmark } from "lucide-react";
+import { PlusCircle, ParkingSquare, LayoutDashboard, CalendarCheck, Loader2, Building, Users, Bookmark, History } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { UserNav } from "@/components/layout/user-nav";
 import {
@@ -136,6 +136,14 @@ export default function MySpotsPage() {
                     </SidebarMenuButton>
                   </Link>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <Link href="/admin/rental-history" legacyBehavior passHref>
+                    <SidebarMenuButton tooltip="Histórico de Aluguéis">
+                      <History />
+                      <span>Histórico de Aluguéis</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
               </SidebarGroup>
             )}
           </SidebarMenu>
@@ -218,3 +226,5 @@ export default function MySpotsPage() {
     </div>
   );
 }
+
+    

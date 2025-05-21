@@ -27,7 +27,7 @@ import { UserNav } from "@/components/layout/user-nav";
 import type { User, Condominium } from "@/types";
 import { getUsers, updateUser } from "@/lib/user-service";
 import { getCondominiumById, getCondominiums } from "@/lib/condominium-service";
-import { LayoutDashboard, ParkingSquare, CalendarCheck, Building, Users as UsersIcon, ArrowLeft, Loader2, Eye, Edit2, User as UserIconLucide, Mail, Building2, Calendar as CalendarIconLucide, Hash, PhoneIcon, Bookmark } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, Building, Users as UsersIcon, ArrowLeft, Loader2, Eye, Edit2, User as UserIconLucide, Mail, Building2, Calendar as CalendarIconLucide, Hash, PhoneIcon, Bookmark, History } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -268,6 +268,14 @@ export default function ManageUsersPage() {
                     <SidebarMenuButton isActive tooltip="Gerenciar Usuários">
                       <UsersIcon />
                       <span>Gerenciar Usuários</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <Link href="/admin/rental-history" legacyBehavior passHref>
+                    <SidebarMenuButton tooltip="Histórico de Aluguéis">
+                      <History />
+                      <span>Histórico de Aluguéis</span>
                     </SidebarMenuButton>
                   </Link>
                 </SidebarMenuItem>
@@ -552,3 +560,5 @@ export default function ManageUsersPage() {
     </div>
   );
 }
+
+    

@@ -34,7 +34,7 @@ import {
   SidebarGroup,
   SidebarGroupLabel
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, ParkingSquare, CalendarCheck, ArrowLeft, Loader2, Building, Users, Bookmark, PlusCircle } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, ArrowLeft, Loader2, Building, Users, Bookmark, PlusCircle, History } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -172,6 +172,14 @@ export default function RegisterCondominiumPage() {
                     </SidebarMenuButton>
                   </Link>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <Link href="/admin/rental-history" legacyBehavior passHref>
+                    <SidebarMenuButton tooltip="Histórico de Aluguéis">
+                      <History />
+                      <span>Histórico de Aluguéis</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
               </SidebarGroup>
             )}
           </SidebarMenu>
@@ -262,3 +270,5 @@ export default function RegisterCondominiumPage() {
     </div>
   );
 }
+
+    

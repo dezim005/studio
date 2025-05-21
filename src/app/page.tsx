@@ -24,7 +24,7 @@ import { UserNav } from "@/components/layout/user-nav";
 import type { ParkingSpot, Reservation } from "@/types"; 
 import { getParkingSpots } from "@/lib/parking-spot-service"; 
 import { getAllReservations, isSpotFullyBooked } from "@/lib/reservation-service"; 
-import { LayoutDashboard, ParkingSquare, CalendarCheck, Search, List, Map, Loader2, Building, Users, Bookmark } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, Search, List, Map, Loader2, Building, Users, Bookmark, History } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -198,6 +198,14 @@ export default function DashboardPage() {
                     </SidebarMenuButton>
                   </Link>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <Link href="/admin/rental-history" legacyBehavior passHref>
+                    <SidebarMenuButton tooltip="Histórico de Aluguéis">
+                      <History />
+                      <span>Histórico de Aluguéis</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
               </SidebarGroup>
             )}
           </SidebarMenu>
@@ -310,3 +318,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    

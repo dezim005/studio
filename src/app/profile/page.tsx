@@ -214,10 +214,12 @@ export default function ProfilePage() {
                   </Link>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Gerenciar Usuários (Em breve)" disabled>
+                  <Link href="/admin/users" legacyBehavior passHref>
+                    <SidebarMenuButton tooltip="Gerenciar Usuários">
                       <Users />
                       <span>Gerenciar Usuários</span>
                     </SidebarMenuButton>
+                  </Link>
                 </SidebarMenuItem>
               </SidebarGroup>
             )}

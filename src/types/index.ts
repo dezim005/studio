@@ -1,4 +1,10 @@
 
+export interface Condominium {
+  id: string;
+  name: string;
+  address: string;
+}
+
 export interface ParkingSpot {
   id: string;
   number: string;
@@ -32,12 +38,14 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  password?: string; 
-  role: 'resident' | 'manager'; 
+  password?: string;
+  role: 'resident' | 'manager';
   avatarUrl?: string;
-  dateOfBirth?: string; 
+  dateOfBirth?: string;
   apartment?: string;
   cpf?: string;
   phone?: string;
   description?: string;
+  condominiumId?: string; // ID do condomínio ao qual o usuário pertence
 }
+

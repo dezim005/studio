@@ -19,13 +19,15 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
   useSidebar,
+  SidebarGroup,
+  SidebarGroupLabel
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, ParkingSquare, CalendarCheck, Loader2 } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, Loader2, Building, Users } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 
 export default function ReservationsPage() {
-  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth(); // Adicionado user
   const router = useRouter();
   const { toast } = useToast();
   const { isMobile } = useSidebar();
@@ -36,7 +38,7 @@ export default function ReservationsPage() {
     }
   }, [isAuthenticated, isAuthLoading, router]);
 
-  if (isAuthLoading || !isAuthenticated) {
+  if (isAuthLoading || !isAuthenticated || !user) { // Adicionado !user
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -91,6 +93,25 @@ export default function ReservationsPage() {
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
+            {user?.role === 'manager' && (
+              <SidebarGroup>
+                <SidebarGroupLabel className="pt-4">Administração</SidebarGroupLabel>
+                <SidebarMenuItem>
+                  <Link href="/admin/condominiums/register" legacyBehavior passHref>
+                    <SidebarMenuButton tooltip="Cadastrar Condomínio">
+                      <Building />
+                      <span>Cadastrar Condomínio</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <SidebarMenuButton tooltip="Gerenciar Usuários (Em breve)" disabled>
+                      <Users />
+                      <span>Gerenciar Usuários</span>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarGroup>
+            )}
           </SidebarMenu>
         </SidebarContent>
       </Sidebar>

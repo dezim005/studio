@@ -13,7 +13,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (data: Pick<User, "email" | "password">) => Promise<boolean>;
   logout: () => void;
-  register: (data: Pick<User, "name" | "email" | "password">) => Promise<{ success: boolean; message: string }>;
+  register: (data: Pick<User, "name" | "email" | "password"> & { condominiumId?: string }) => Promise<{ success: boolean; message: string }>;
   updateUserProfile: (data: Partial<User>) => Promise<{ success: boolean; message: string }>;
   setIsAuthenticated: Dispatch<SetStateAction<boolean>>;
   setUser: Dispatch<SetStateAction<User | null>>;
@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = async (data: Pick<User, "email" | "password">): Promise<boolean> => {
-    await new Promise(resolve => setTimeout(resolve, 500)); 
+    await new Promise(resolve => setTimeout(resolve, 500));
     const registeredUsers = getRegisteredUsers();
     const foundUser = registeredUsers.find(
       (u) => u.email === data.email && u.password === data.password
@@ -93,35 +93,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (data: Pick<User, "name" | "email" | "password">): Promise<{ success: boolean; message: string }> => {
-    await new Promise(resolve => setTimeout(resolve, 500)); 
+  const register = async (data: Pick<User, "name" | "email" | "password"> & { condominiumId?: string }): Promise<{ success: boolean; message: string }> => {
+    await new Promise(resolve => setTimeout(resolve, 500));
     const registeredUsers = getRegisteredUsers();
-    
+
     if (registeredUsers.find((u) => u.email === data.email)) {
       return { success: false, message: "Este email já está cadastrado." };
     }
 
     let role: 'resident' | 'manager' = 'resident';
     if (registeredUsers.length === 0) {
-      role = 'manager'; 
+      role = 'manager';
     }
 
     const newUser: User = {
-      id: `user${Date.now()}`,
+      id: `user-${Date.now()}`,
       name: data.name,
       email: data.email,
-      password: data.password, 
-      role: role, 
+      password: data.password,
+      role: role,
       avatarUrl: `https://placehold.co/40x40.png?text=${data.name[0]?.toUpperCase() || 'U'}`,
       dateOfBirth: "",
       apartment: "",
       cpf: "",
       phone: "",
       description: "",
+      condominiumId: role === 'resident' ? data.condominiumId : undefined, // Só atribui condominiumId se for morador
     };
 
     saveRegisteredUsers([...registeredUsers, newUser]);
-    const roleMessage = role === 'manager' ? "Você foi registrado como Síndico." : "Você foi registrado como Morador.";
+    const roleMessage = role === 'manager' ? "Você foi registrado como Síndico." : `Você foi registrado como Morador${newUser.condominiumId ? ' do condomínio selecionado' : ''}.`;
     return { success: true, message: `Cadastro realizado com sucesso! ${roleMessage} Você pode fazer login agora.` };
   };
 
@@ -147,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("Falha ao salvar o estado de autenticação atualizado no localStorage", error);
        return { success: false, message: "Erro ao salvar perfil. Tente novamente." };
     }
-    
+
     return { success: true, message: "Perfil atualizado com sucesso!" };
   };
 

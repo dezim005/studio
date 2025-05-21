@@ -5,7 +5,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { SpotAvailabilityCalendar } from "@/components/parking/spot-availability-calendar";
-import { getSpotById } from "@/lib/mock-data"; 
+import { getSpotById } from "@/lib/mock-data";
 import type { ParkingSpot } from "@/types";
 import { Logo } from "@/components/logo";
 import { UserNav } from "@/components/layout/user-nav";
@@ -19,8 +19,10 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
   useSidebar,
+  SidebarGroup,
+  SidebarGroupLabel
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, ParkingSquare, CalendarCheck, ArrowLeft, AlertTriangle, Loader2 } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, ArrowLeft, AlertTriangle, Loader2, Building, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth-context";
@@ -31,7 +33,7 @@ export default function ManageSpotAvailabilityPage() {
   const router = useRouter();
   const params = useParams();
   const spotId = params.spotId as string;
-  const [spot, setSpot] = React.useState<ParkingSpot | null | undefined>(undefined); 
+  const [spot, setSpot] = React.useState<ParkingSpot | null | undefined>(undefined);
   const { isMobile } = useSidebar();
 
   React.useEffect(() => {
@@ -76,8 +78,8 @@ export default function ManageSpotAvailabilityPage() {
       </div>
     );
   }
-  
-  if (spot === null) { 
+
+  if (spot === null) {
      return (
       <div className="flex min-h-screen w-full items-center justify-center p-4">
         <div className="text-center">
@@ -127,6 +129,25 @@ export default function ManageSpotAvailabilityPage() {
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
+            {user?.role === 'manager' && (
+              <SidebarGroup>
+                <SidebarGroupLabel className="pt-4">Administração</SidebarGroupLabel>
+                <SidebarMenuItem>
+                  <Link href="/admin/condominiums/register" legacyBehavior passHref>
+                    <SidebarMenuButton tooltip="Cadastrar Condomínio">
+                      <Building />
+                      <span>Cadastrar Condomínio</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <SidebarMenuButton tooltip="Gerenciar Usuários (Em breve)" disabled>
+                      <Users />
+                      <span>Gerenciar Usuários</span>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarGroup>
+            )}
           </SidebarMenu>
         </SidebarContent>
       </Sidebar>

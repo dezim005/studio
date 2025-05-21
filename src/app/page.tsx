@@ -13,6 +13,8 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
   useSidebar,
+  SidebarGroup,
+  SidebarGroupLabel
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,7 +23,7 @@ import { Logo } from "@/components/logo";
 import { UserNav } from "@/components/layout/user-nav";
 import type { ParkingSpot } from "@/types";
 import { mockParkingSpots } from "@/lib/mock-data";
-import { LayoutDashboard, ParkingSquare, CalendarCheck, Search, Filter, List, Map, Loader2 } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, Search, Filter, List, Map, Loader2, Building, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -35,14 +37,14 @@ import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
-  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth(); // Adicionado user
   const router = useRouter();
 
   const [spots, setSpots] = React.useState<ParkingSpot[]>(mockParkingSpots);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [filterType, setFilterType] = React.useState<string>("all");
   const [filterAvailability, setFilterAvailability] = React.useState<string>("all");
-  const [viewMode, setViewMode] = React.useState<"list" | "map">("list"); 
+  const [viewMode, setViewMode] = React.useState<"list" | "map">("list");
 
   const { isMobile } = useSidebar();
 
@@ -53,7 +55,7 @@ export default function DashboardPage() {
   }, [isAuthenticated, isAuthLoading, router]);
 
   React.useEffect(() => {
-    if (!isAuthenticated) return; 
+    if (!isAuthenticated) return;
     const interval = setInterval(() => {
       setSpots((prevSpots) =>
         prevSpots.map((spot) =>
@@ -62,11 +64,11 @@ export default function DashboardPage() {
             : spot
         )
       );
-    }, 5000); 
+    }, 5000);
     return () => clearInterval(interval);
   }, [isAuthenticated]);
 
-  if (isAuthLoading || !isAuthenticated) {
+  if (isAuthLoading || !isAuthenticated || !user) { // Adicionado !user
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -124,6 +126,25 @@ export default function DashboardPage() {
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
+            {user?.role === 'manager' && (
+              <SidebarGroup>
+                <SidebarGroupLabel className="pt-4">Administração</SidebarGroupLabel>
+                <SidebarMenuItem>
+                  <Link href="/admin/condominiums/register" legacyBehavior passHref>
+                    <SidebarMenuButton tooltip="Cadastrar Condomínio">
+                      <Building />
+                      <span>Cadastrar Condomínio</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <SidebarMenuButton tooltip="Gerenciar Usuários (Em breve)" disabled>
+                      <Users />
+                      <span>Gerenciar Usuários</span>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarGroup>
+            )}
           </SidebarMenu>
         </SidebarContent>
       </Sidebar>
@@ -178,13 +199,13 @@ export default function DashboardPage() {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="flex justify-end items-center mb-4 gap-2">
                 <span className="text-sm text-muted-foreground">Visualizar:</span>
                 <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="sm" onClick={() => setViewMode('list')}>
                   <List className="mr-2 h-4 w-4"/> Lista
                 </Button>
-                <Button variant={viewMode === 'map' ? 'secondary' : 'ghost'} size="sm" onClick={() => setViewMode('map')} disabled> 
+                <Button variant={viewMode === 'map' ? 'secondary' : 'ghost'} size="sm" onClick={() => setViewMode('map')} disabled>
                   <Map className="mr-2 h-4 w-4"/> Mapa (Em breve)
                 </Button>
               </div>

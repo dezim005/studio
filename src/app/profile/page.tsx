@@ -31,12 +31,15 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
   useSidebar,
+  SidebarGroup,
+  SidebarGroupLabel
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, ParkingSquare, CalendarCheck, User as UserIcon, Loader2, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, User as UserIcon, Loader2, ArrowLeft, Building, Users } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@/types";
+import { getCondominiumById } from "@/lib/condominium-service"; // Importar
 
 const profileFormSchema = z.object({
   name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres."),
@@ -50,6 +53,7 @@ const profileFormSchema = z.object({
     message: "Formato de telefone inválido (use (XX) XXXXX-XXXX).",
   }).describe("Seu número de telefone."),
   description: z.string().max(200, "A descrição não pode exceder 200 caracteres.").optional().describe("Uma breve descrição sobre você."),
+  condominiumName: z.string().optional().describe("Nome do seu condomínio."), // Campo apenas para exibição
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -60,6 +64,8 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const { isMobile } = useSidebar();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [condominiumName, setCondominiumName] = React.useState<string | undefined>(undefined);
+
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -71,6 +77,7 @@ export default function ProfilePage() {
       cpf: user?.cpf || "",
       phone: user?.phone || "",
       description: user?.description || "",
+      condominiumName: "", // Será preenchido no useEffect
     },
   });
 
@@ -82,6 +89,15 @@ export default function ProfilePage() {
 
   React.useEffect(() => {
     if (user) {
+      let condoName = "Não especificado";
+      if (user.condominiumId) {
+        const condo = getCondominiumById(user.condominiumId);
+        if (condo) {
+          condoName = condo.name;
+        }
+      }
+      setCondominiumName(condoName);
+
       form.reset({
         name: user.name || "",
         email: user.email || "",
@@ -90,6 +106,7 @@ export default function ProfilePage() {
         cpf: user.cpf || "",
         phone: user.phone || "",
         description: user.description || "",
+        condominiumName: condoName,
       });
     }
   }, [user, form]);
@@ -100,7 +117,7 @@ export default function ProfilePage() {
 
     const profileDataToUpdate: Partial<User> = {
       name: data.name,
-      // email não é atualizado aqui
+      // email e condominiumId não são atualizados aqui
       apartment: data.apartment,
       dateOfBirth: data.dateOfBirth,
       cpf: data.cpf,
@@ -132,7 +149,7 @@ export default function ProfilePage() {
       </div>
     );
   }
-  
+
   const formatCPF = (value: string) => {
     const cpf = value.replace(/\D/g, '');
     if (cpf.length <= 3) return cpf;
@@ -185,6 +202,25 @@ export default function ProfilePage() {
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
+            {user?.role === 'manager' && (
+              <SidebarGroup>
+                <SidebarGroupLabel className="pt-4">Administração</SidebarGroupLabel>
+                <SidebarMenuItem>
+                  <Link href="/admin/condominiums/register" legacyBehavior passHref>
+                    <SidebarMenuButton tooltip="Cadastrar Condomínio">
+                      <Building />
+                      <span>Cadastrar Condomínio</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <SidebarMenuButton tooltip="Gerenciar Usuários (Em breve)" disabled>
+                      <Users />
+                      <span>Gerenciar Usuários</span>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarGroup>
+            )}
           </SidebarMenu>
         </SidebarContent>
       </Sidebar>
@@ -247,6 +283,24 @@ export default function ProfilePage() {
                       </FormItem>
                     )}
                   />
+                  {user.role === 'resident' && user.condominiumId && (
+                    <FormField
+                      control={form.control}
+                      name="condominiumName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Condomínio</FormLabel>
+                          <FormControl>
+                            <Input {...field} readOnly disabled className="cursor-not-allowed bg-muted/50"/>
+                          </FormControl>
+                          <FormDescription>
+                            Seu condomínio. Não pode ser alterado aqui.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                   <FormField
                     control={form.control}
                     name="apartment"
@@ -283,9 +337,9 @@ export default function ProfilePage() {
                       <FormItem>
                         <FormLabel>CPF (Opcional)</FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="XXX.XXX.XXX-XX" 
-                            {...field} 
+                          <Input
+                            placeholder="XXX.XXX.XXX-XX"
+                            {...field}
                             onChange={(e) => field.onChange(formatCPF(e.target.value))}
                             maxLength={14}
                           />
@@ -301,9 +355,9 @@ export default function ProfilePage() {
                       <FormItem>
                         <FormLabel>Telefone (Opcional)</FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="(XX) XXXXX-XXXX" 
-                            {...field} 
+                          <Input
+                            placeholder="(XX) XXXXX-XXXX"
+                            {...field}
                             onChange={(e) => field.onChange(formatPhone(e.target.value))}
                             maxLength={15}
                           />

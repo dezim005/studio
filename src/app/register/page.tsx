@@ -16,18 +16,28 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import type { Condominium } from "@/types";
+import { getCondominiums } from "@/lib/condominium-service";
 
 const registrationFormSchema = z.object({
   name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres"),
   email: z.string().email("Endereço de email inválido").min(1, "Email é obrigatório"),
   password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
   confirmPassword: z.string(),
+  condominiumId: z.string().min(1, "Selecione o seu condomínio"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
@@ -40,6 +50,8 @@ export default function RegisterPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [condominiums, setCondominiums] = React.useState<Condominium[]>([]);
+  const [isLoadingCondominiums, setIsLoadingCondominiums] = React.useState(true);
 
   const form = useForm<RegistrationFormValues>({
     resolver: zodResolver(registrationFormSchema),
@@ -48,6 +60,7 @@ export default function RegisterPage() {
       email: "",
       password: "",
       confirmPassword: "",
+      condominiumId: "",
     },
   });
 
@@ -57,10 +70,23 @@ export default function RegisterPage() {
     }
   }, [isAuthenticated, isAuthLoading, router]);
 
+  React.useEffect(() => {
+    const fetchCondos = () => {
+      setIsLoadingCondominiums(true);
+      const condos = getCondominiums();
+      setCondominiums(condos);
+      setIsLoadingCondominiums(false);
+    };
+    fetchCondos();
+  }, []);
+
   async function onSubmit(data: RegistrationFormValues) {
     setIsSubmitting(true);
-    const result = await register({ name: data.name, email: data.email, password: data.password });
-    
+    // Para o síndico, condominiumId não é relevante no backend/context, mas o campo está no form.
+    // A lógica no AuthContext já trata de não atribuir condominiumId se for o primeiro usuário (síndico).
+    // Para moradores, condominiumId é crucial.
+    const result = await register({ name: data.name, email: data.email, password: data.password, condominiumId: data.condominiumId });
+
     if (result.success) {
       toast({
         title: "Cadastro Bem-sucedido!",
@@ -74,12 +100,12 @@ export default function RegisterPage() {
         description: result.message,
         variant: "destructive",
       });
-      form.setError("email", { type: "manual", message: result.message });
+      form.setError("email", { type: "manual", message: result.message }); // Ou erro genérico
     }
     setIsSubmitting(false);
   }
 
-  if (isAuthLoading || (!isAuthLoading && isAuthenticated)) {
+  if (isAuthLoading || (!isAuthLoading && isAuthenticated) || isLoadingCondominiums) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -152,7 +178,36 @@ export default function RegisterPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
+              <FormField
+                control={form.control}
+                name="condominiumId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Condomínio</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={condominiums.length === 0}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={condominiums.length === 0 ? "Nenhum condomínio cadastrado" : "Selecione seu condomínio"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {condominiums.map((condo) => (
+                          <SelectItem key={condo.id} value={condo.id}>
+                            {condo.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {condominiums.length === 0 && (
+                        <p className="text-sm text-muted-foreground">
+                            Peça ao síndico para cadastrar os condomínios primeiro.
+                        </p>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full" disabled={isSubmitting || (condominiums.length === 0 && !form.getValues("email").includes("manager"))}> {/* Permite síndico registrar sem condomínio */}
                  {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 {isSubmitting ? "Registrando..." : "Registrar"}
               </Button>
@@ -172,4 +227,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-

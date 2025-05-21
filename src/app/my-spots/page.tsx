@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ParkingSpotCard } from "@/components/parking/parking-spot-card";
 import type { ParkingSpot } from "@/types";
-import { mockParkingSpots } from "@/lib/mock-data"; 
-import { PlusCircle, ParkingSquare, LayoutDashboard, CalendarCheck, Loader2 } from "lucide-react";
+import { mockParkingSpots } from "@/lib/mock-data";
+import { PlusCircle, ParkingSquare, LayoutDashboard, CalendarCheck, Loader2, Building, Users } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { UserNav } from "@/components/layout/user-nav";
 import {
@@ -21,6 +21,8 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
   useSidebar,
+  SidebarGroup,
+  SidebarGroupLabel
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
@@ -43,7 +45,7 @@ export default function MySpotsPage() {
       </div>
     );
   }
-  
+
   const spotsToDisplay = user.role === 'manager'
     ? mockParkingSpots // Manager sees all spots
     : mockParkingSpots.filter(spot => spot.ownerId === user.id); // Resident sees only their spots
@@ -83,6 +85,25 @@ export default function MySpotsPage() {
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
+            {user?.role === 'manager' && (
+              <SidebarGroup>
+                <SidebarGroupLabel className="pt-4">Administração</SidebarGroupLabel>
+                <SidebarMenuItem>
+                  <Link href="/admin/condominiums/register" legacyBehavior passHref>
+                    <SidebarMenuButton tooltip="Cadastrar Condomínio">
+                      <Building />
+                      <span>Cadastrar Condomínio</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <SidebarMenuButton tooltip="Gerenciar Usuários (Em breve)" disabled>
+                      <Users />
+                      <span>Gerenciar Usuários</span>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarGroup>
+            )}
           </SidebarMenu>
         </SidebarContent>
       </Sidebar>
@@ -110,7 +131,7 @@ export default function MySpotsPage() {
                 {user.role === 'manager' ? "Gerenciar Vagas do Condomínio" : "Gerencie Suas Vagas"}
               </CardTitle>
               <CardDescription>
-                {user.role === 'manager' 
+                {user.role === 'manager'
                   ? "Visualize e gerencie todas as vagas de estacionamento cadastradas no sistema."
                   : "Visualize, edite a disponibilidade e gerencie suas vagas de estacionamento cadastradas."
                 }
@@ -127,13 +148,13 @@ export default function MySpotsPage() {
                 <div className="text-center py-10">
                    <ParkingSquare className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                   <p className="text-lg font-medium text-muted-foreground">
-                    {user.role === 'manager' 
-                      ? "Nenhuma vaga cadastrada no sistema ainda." 
+                    {user.role === 'manager'
+                      ? "Nenhuma vaga cadastrada no sistema ainda."
                       : "Você ainda não cadastrou nenhuma vaga."}
                   </p>
                   <Link href="/my-spots/register" passHref legacyBehavior>
                     <Button className="mt-4">
-                      <PlusCircle className="mr-2 h-4 w-4" /> 
+                      <PlusCircle className="mr-2 h-4 w-4" />
                       {user.role === 'manager' ? "Cadastrar Primeira Vaga" : "Cadastrar Sua Primeira Vaga"}
                     </Button>
                   </Link>

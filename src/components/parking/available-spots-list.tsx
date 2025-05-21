@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import type { ParkingSpot, Reservation } from "@/types"; 
+import type { ParkingSpot, Reservation } from "@/types";
 import { ParkingSpotCard } from "./parking-spot-card";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,103 +12,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import type { DateRange } from "react-day-picker";
-import { addDays, format, startOfDay, endOfDay } from "date-fns"; 
-import { ptBR } from 'date-fns/locale';
-import { Search, ParkingSquare, CalendarIcon, Loader2 } from "lucide-react"; 
+import { Search, ParkingSquare, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/auth-context"; 
-import { addReservation, getAllReservations } from "@/lib/reservation-service"; 
+import { useAuth } from "@/contexts/auth-context";
+import { addReservation, getAllReservations } from "@/lib/reservation-service";
 import { getParkingSpots } from "@/lib/parking-spot-service";
+import { SpotReservationDialog } from "./spot-reservation-dialog"; // Novo componente
+import type { DateRange } from "react-day-picker";
+import { startOfDay, endOfDay } from "date-fns";
 
 
 interface AvailableSpotsListProps {
-  spots: ParkingSpot[]; 
-}
-
-export interface ReservationDetails {
-  dateRange: DateRange;
-}
-
-function DateRangePicker({
-  className,
-  date,
-  onDateChange,
-}: React.HTMLAttributes<HTMLDivElement> & { date: DateRange | undefined; onDateChange: (date: DateRange | undefined) => void }) {
-  return (
-    <div className={cn("grid gap-2", className)}>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            id="date"
-            variant={"outline"}
-            className={cn(
-              "w-full justify-start text-left font-normal",
-              !date && "text-muted-foreground"
-            )}
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {date?.from ? (
-              date.to ? (
-                <>
-                  {format(date.from, "PPP", { locale: ptBR })} -{" "}
-                  {format(date.to, "PPP", { locale: ptBR })}
-                </>
-              ) : (
-                format(date.from, "PPP", { locale: ptBR })
-              )
-            ) : (
-              <span>Escolha um período</span>
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            initialFocus
-            mode="range"
-            defaultMonth={date?.from}
-            selected={date}
-            onSelect={onDateChange}
-            numberOfMonths={2}
-            disabled={(day) => day < startOfDay(new Date())} 
-            locale={ptBR}
-          />
-        </PopoverContent>
-      </Popover>
-    </div>
-  )
+  spots: ParkingSpot[];
 }
 
 export function AvailableSpotsList({ spots: initialSpots }: AvailableSpotsListProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  
+
   const [spots, setSpots] = React.useState<ParkingSpot[]>(initialSpots);
   const [allReservations, setAllReservations] = React.useState<Reservation[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
 
   const [searchTerm, setSearchTerm] = React.useState("");
   const [filterType, setFilterType] = React.useState<string>("all");
-  const [dateRange, setDateRange] = React.useState<DateRange | undefined>({
-    from: startOfDay(new Date()),
-    to: startOfDay(addDays(new Date(), 0)),
-  });
-  const [isSubmittingReservation, setIsSubmittingReservation] = React.useState<string | null>(null);
+
+  const [selectedSpotForDialog, setSelectedSpotForDialog] = React.useState<ParkingSpot | null>(null);
+  const [isReservationDialogOpen, setIsReservationDialogOpen] = React.useState(false);
+  const [isSubmittingReservation, setIsSubmittingReservation] = React.useState(false);
 
 
   React.useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      setSpots(initialSpots); 
-
+      // Usar initialSpots que vêm da página, pois a página já busca do service
+      setSpots(initialSpots);
       const fetchedReservations = getAllReservations();
       setAllReservations(fetchedReservations);
       setIsLoading(false);
@@ -116,66 +54,39 @@ export function AvailableSpotsList({ spots: initialSpots }: AvailableSpotsListPr
     fetchData();
   }, [initialSpots]);
 
-
-  const isSpotBookableForSelectedRange = React.useCallback((spot: ParkingSpot, selectedRange: DateRange | undefined): boolean => {
-    if (!selectedRange?.from || !user) return false;
-    if (!spot.isAvailable) return false; 
-    if (!spot.availability || spot.availability.length === 0) return false;
-
-    const reqReservationStart = startOfDay(selectedRange.from);
-    const reqReservationEnd = selectedRange.to ? endOfDay(selectedRange.to) : endOfDay(selectedRange.from);
-
-    const isPeriodWithinAnySlot = spot.availability.some(slot => {
-        const slotStart = new Date(slot.startTime);
-        const slotEnd = new Date(slot.endTime);
-        // O slot de disponibilidade deve cobrir completamente o período da reserva (dias inteiros).
-        return slotStart <= reqReservationStart && slotEnd >= reqReservationEnd;
-    });
-
-    if (!isPeriodWithinAnySlot) return false;
-
-    const spotReservations = allReservations.filter(r => r.spotId === spot.id);
-    const hasConflict = spotReservations.some(res => {
-        const resStart = new Date(res.startTime);
-        const resEnd = new Date(res.endTime);
-        // Conflito se: reqReservationStart < resEnd E reqReservationEnd > resStart
-        return reqReservationStart < resEnd && reqReservationEnd > resStart;
-    });
-
-    return !hasConflict;
-  }, [user, allReservations]);
-
-
   const filteredSpots = React.useMemo(() => {
     return spots.filter(spot => {
       const matchesSearch = spot.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             spot.location.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesType = filterType === 'all' || spot.type === filterType;
       
-      if (!spot.isAvailable || !spot.availability || spot.availability.length === 0) {
-        return false;
-      }
-      return matchesSearch && matchesType;
+      // Mostrar apenas vagas que estão marcadas como disponíveis E têm alguma definição de disponibilidade
+      return spot.isAvailable && spot.availability && spot.availability.length > 0 && matchesSearch && matchesType;
     });
   }, [spots, searchTerm, filterType]);
 
-  const handleReserve = async (spotId: string) => {
+  const handleOpenReservationDialog = (spot: ParkingSpot) => {
+    setSelectedSpotForDialog(spot);
+    setIsReservationDialogOpen(true);
+  };
+
+  const handleConfirmReservation = async (spotId: string, dateRange: DateRange) => {
     if (!user) {
       toast({ title: "Erro", description: "Você precisa estar logado para reservar.", variant: "destructive" });
       return;
     }
-    if (!dateRange || !dateRange.from) {
+    if (!dateRange.from) {
       toast({ title: "Selecione o Período", description: "Por favor, selecione um período para sua reserva.", variant: "destructive" });
       return;
     }
     
-    setIsSubmittingReservation(spotId);
+    setIsSubmittingReservation(true);
 
     const reservationData = {
       spotId,
       userId: user.id,
-      startTime: startOfDay(dateRange.from), // Garante que é o início do dia
-      endTime: dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from), // Garante que é o fim do dia
+      startTime: startOfDay(dateRange.from),
+      endTime: dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from),
     };
 
     const result = await addReservation(reservationData);
@@ -185,10 +96,12 @@ export function AvailableSpotsList({ spots: initialSpots }: AvailableSpotsListPr
         title: "Reserva Confirmada!",
         description: result.message,
       });
-      const updatedSpots = getParkingSpots(); 
+      // Rebuscar dados para atualizar a UI
+      const updatedSpots = getParkingSpots();
       setSpots(updatedSpots);
-      const updatedReservations = getAllReservations(); 
+      const updatedReservations = getAllReservations();
       setAllReservations(updatedReservations);
+      setIsReservationDialogOpen(false); // Fechar dialog
     } else {
       toast({
         title: "Falha na Reserva",
@@ -196,7 +109,7 @@ export function AvailableSpotsList({ spots: initialSpots }: AvailableSpotsListPr
         variant: "destructive",
       });
     }
-    setIsSubmittingReservation(null);
+    setIsSubmittingReservation(false);
   };
   
   if (isLoading) {
@@ -210,7 +123,7 @@ export function AvailableSpotsList({ spots: initialSpots }: AvailableSpotsListPr
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-1">
         <div className="relative lg:col-span-2">
           <Search className="absolute left-2.5 top-3 h-4 w-4 text-muted-foreground" />
           <Input
@@ -233,33 +146,38 @@ export function AvailableSpotsList({ spots: initialSpots }: AvailableSpotsListPr
             <SelectItem value="motorcycle">Moto</SelectItem>
           </SelectContent>
         </Select>
-        <DateRangePicker date={dateRange} onDateChange={setDateRange} />
+        {/* DateRangePicker removido daqui */}
       </div>
 
       {filteredSpots.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredSpots.map((spot) => {
-            const isBookable = isSpotBookableForSelectedRange(spot, dateRange);
-            return (
-              <ParkingSpotCard 
-                key={spot.id} 
-                spot={spot} 
-                showActions 
-                onReserve={isBookable ? () => handleReserve(spot.id) : undefined} // Passa onReserve apenas se for reservável
-                isBookable={isBookable}
-                isReserving={isSubmittingReservation === spot.id}
-              />
-            );
-          })}
+          {filteredSpots.map((spot) => (
+            <ParkingSpotCard
+              key={spot.id}
+              spot={spot}
+              showActions
+              onBookSpotClick={() => handleOpenReservationDialog(spot)}
+            />
+          ))}
         </div>
       ) : (
         <div className="text-center py-10 border rounded-md bg-card">
           <ParkingSquare className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-          <p className="text-lg font-medium text-muted-foreground">Nenhuma vaga disponível corresponde aos seus critérios.</p>
-          <p className="text-sm text-muted-foreground">Tente ajustar sua busca, filtros ou período selecionado.</p>
+          <p className="text-lg font-medium text-muted-foreground">Nenhuma vaga disponível que corresponda aos seus critérios.</p>
+          <p className="text-sm text-muted-foreground">Verifique se há vagas com disponibilidade definida ou ajuste seus filtros.</p>
         </div>
+      )}
+
+      {selectedSpotForDialog && (
+        <SpotReservationDialog
+          spot={selectedSpotForDialog}
+          allReservations={allReservations}
+          isOpen={isReservationDialogOpen}
+          onOpenChange={setIsReservationDialogOpen}
+          onConfirmReservation={handleConfirmReservation}
+          isSubmitting={isSubmittingReservation}
+        />
       )}
     </div>
   );
 }
-

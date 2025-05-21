@@ -3,19 +3,18 @@ import type { ParkingSpot } from "@/types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SpotStatusBadge } from "./spot-status-badge";
-import { Car, MapPin, ParkingCircle, Tag, CalendarDays, User as UserIconLucide, Loader2 } from "lucide-react"; // Adicionado Loader2
+import { Car, MapPin, ParkingCircle, Tag, CalendarDays, User as UserIconLucide, Eye } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context"; 
 
 interface ParkingSpotCardProps {
   spot: ParkingSpot;
   showActions?: boolean;
-  onReserve?: (spotId: string) => void;
-  isBookable?: boolean; // Nova prop para indicar se é reservável no contexto atual
-  isReserving?: boolean; // Nova prop para indicar se esta vaga específica está em processo de reserva
+  // onReserve prop removida, substituída por onBookSpotClick
+  onBookSpotClick?: (spot: ParkingSpot) => void; 
 }
 
-export function ParkingSpotCard({ spot, showActions = false, onReserve, isBookable = true, isReserving = false }: ParkingSpotCardProps) {
+export function ParkingSpotCard({ spot, showActions = false, onBookSpotClick }: ParkingSpotCardProps) {
   const { user } = useAuth(); 
 
   const spotTypeTranslations: Record<ParkingSpot['type'], string> = {
@@ -25,6 +24,10 @@ export function ParkingSpotCard({ spot, showActions = false, onReserve, isBookab
     motorcycle: 'Moto'
   };
 
+  const canCurrentUserManage = user && spot.ownerId === user.id;
+  // Uma vaga é "bookable" na lista se estiver disponível e tiver disponibilidade definida
+  const isGenerallyBookable = spot.isAvailable && spot.availability && spot.availability.length > 0;
+
   return (
     <Card className="w-full shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col justify-between">
       <div>
@@ -33,8 +36,6 @@ export function ParkingSpotCard({ spot, showActions = false, onReserve, isBookab
             <CardTitle className="text-2xl font-semibold text-primary flex items-center">
               <ParkingCircle className="mr-2 h-6 w-6" /> Vaga {spot.number}
             </CardTitle>
-            {/* O SpotStatusBadge reflete o spot.isAvailable geral. 
-                A "indisponibilidade" para um período específico será mostrada no botão. */}
             <SpotStatusBadge isAvailable={spot.isAvailable} />
           </div>
           <CardDescription className="flex items-center text-muted-foreground pt-1">
@@ -55,31 +56,32 @@ export function ParkingSpotCard({ spot, showActions = false, onReserve, isBookab
           {spot.description && (
              <p className="text-sm text-muted-foreground pt-1 italic">"{spot.description}"</p>
           )}
+           {!spot.availability || spot.availability.length === 0 && spot.isAvailable && (
+            <p className="text-xs text-orange-600 dark:text-orange-400 pt-1">Disponibilidade não definida pelo proprietário.</p>
+          )}
         </CardContent>
       </div>
       {showActions && (
         <CardFooter className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
-          {spot.isAvailable && onReserve && isBookable && (
+          {isGenerallyBookable && onBookSpotClick && (
             <Button 
-              onClick={() => onReserve(spot.id)} 
+              onClick={() => onBookSpotClick(spot)} 
               className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground"
-              disabled={isReserving}
             >
-              {isReserving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CalendarDays className="mr-2 h-4 w-4" />}
-              {isReserving ? "Reservando..." : "Reservar Agora"}
+              <Eye className="mr-2 h-4 w-4" /> Ver Disponibilidade e Reservar
             </Button>
           )}
-          {spot.isAvailable && onReserve && !isBookable && (
+          {!isGenerallyBookable && spot.isAvailable && (
              <Button variant="outline" disabled  className="w-full sm:w-auto">
-              Indisponível (Período)
+              Indisponível para Reserva
             </Button>
           )}
-          {!spot.isAvailable && ( // Vaga mestre está indisponível
+           {!spot.isAvailable && ( // Vaga mestre está indisponível
              <Button variant="outline" disabled  className="w-full sm:w-auto">
               Vaga Indisponível
             </Button>
           )}
-          {user && spot.ownerId === user.id && ( 
+          {canCurrentUserManage && ( 
             <Link href={`/my-spots/${spot.id}/availability`} passHref legacyBehavior>
               <Button variant="outline" className="w-full sm:w-auto">
                 <CalendarDays className="mr-2 h-4 w-4" /> Gerenciar Disponibilidade
@@ -91,4 +93,3 @@ export function ParkingSpotCard({ spot, showActions = false, onReserve, isBookab
     </Card>
   );
 }
-

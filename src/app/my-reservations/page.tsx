@@ -3,15 +3,6 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ParkingSpotCard } from "@/components/parking/parking-spot-card";
-import type { ParkingSpot, Reservation } from "@/types";
-import { getParkingSpots } from "@/lib/parking-spot-service"; 
-import { getAllReservations } from "@/lib/reservation-service"; // Import to get all reservations
-import { PlusCircle, ParkingSquare, LayoutDashboard, CalendarCheck, Loader2, Building, Users, Bookmark } from "lucide-react";
-import { Logo } from "@/components/logo";
-import { UserNav } from "@/components/layout/user-nav";
 import {
   Sidebar,
   SidebarContent,
@@ -25,16 +16,30 @@ import {
   SidebarGroup,
   SidebarGroupLabel
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Logo } from "@/components/logo";
+import { UserNav } from "@/components/layout/user-nav";
+import type { Reservation, ParkingSpot } from "@/types";
+import { getAllReservations } from "@/lib/reservation-service";
+import { getSpotById } from "@/lib/parking-spot-service";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, Bookmark, Loader2, AlertTriangle, Building, Users } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
-export default function MySpotsPage() {
-  const { isAuthenticated, user, isLoading: isAuthLoading } = useAuth();
+interface UserReservationDetails extends Reservation {
+  spotDetails?: ParkingSpot;
+}
+
+export default function MyReservationsPage() {
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
   const { isMobile } = useSidebar();
-  const [allSpots, setAllSpots] = React.useState<ParkingSpot[]>([]);
-  const [allReservations, setAllReservations] = React.useState<Reservation[]>([]); // State for all reservations
-  const [isLoadingData, setIsLoadingData] = React.useState(true); // Combined loading state
+
+  const [userReservations, setUserReservations] = React.useState<UserReservationDetails[]>([]);
+  const [isLoadingReservations, setIsLoadingReservations] = React.useState(true);
 
   React.useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
@@ -43,15 +48,20 @@ export default function MySpotsPage() {
   }, [isAuthenticated, isAuthLoading, router]);
 
   React.useEffect(() => {
-    if (isAuthenticated) {
-      setIsLoadingData(true);
-      const spotsFromService = getParkingSpots();
-      setAllSpots(spotsFromService);
-      const reservationsFromService = getAllReservations(); // Fetch all reservations
-      setAllReservations(reservationsFromService);
-      setIsLoadingData(false);
+    if (isAuthenticated && user) {
+      setIsLoadingReservations(true);
+      const allRes = getAllReservations();
+      const currentUserReservations = allRes.filter(res => res.userId === user.id);
+      
+      const detailedReservations: UserReservationDetails[] = currentUserReservations.map(res => {
+        const spot = getSpotById(res.spotId);
+        return { ...res, spotDetails: spot };
+      }).sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()); // Sort by newest first
+
+      setUserReservations(detailedReservations);
+      setIsLoadingReservations(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
 
   if (isAuthLoading || !isAuthenticated || !user) {
     return (
@@ -60,10 +70,6 @@ export default function MySpotsPage() {
       </div>
     );
   }
-
-  const spotsToDisplay = user.role === 'manager'
-    ? allSpots
-    : allSpots.filter(spot => spot.ownerId === user.id);
 
   return (
     <div className="flex min-h-screen w-full">
@@ -86,20 +92,20 @@ export default function MySpotsPage() {
             </SidebarMenuItem>
             <SidebarMenuItem>
               <Link href="/my-spots" legacyBehavior passHref>
-                <SidebarMenuButton isActive tooltip="Minhas Vagas">
+                <SidebarMenuButton tooltip="Minhas Vagas">
                   <ParkingSquare />
                   <span>Minhas Vagas</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-             <SidebarMenuItem>
-                <Link href="/my-reservations" legacyBehavior passHref>
-                  <SidebarMenuButton tooltip="Minhas Reservas">
-                    <Bookmark />
-                    <span>Minhas Reservas</span>
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
+            <SidebarMenuItem>
+              <Link href="/my-reservations" legacyBehavior passHref>
+                <SidebarMenuButton isActive tooltip="Minhas Reservas">
+                  <Bookmark />
+                  <span>Minhas Reservas</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <Link href="/reservations" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Reservar Vaga">
@@ -136,63 +142,68 @@ export default function MySpotsPage() {
       <SidebarInset className="flex flex-col">
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
           {isMobile && <SidebarTrigger />}
-          <h1 className="text-xl font-semibold md:text-2xl">
-            {user.role === 'manager' ? "Todas as Vagas Cadastradas" : "Minhas Vagas de Estacionamento"}
-          </h1>
-          <div className="ml-auto flex items-center gap-4">
-            <Link href="/my-spots/register" passHref legacyBehavior>
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" /> Cadastrar Nova Vaga
-              </Button>
-            </Link>
+          <h1 className="text-xl font-semibold md:text-2xl">Minhas Reservas</h1>
+          <div className="ml-auto">
             <UserNav />
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
+        <main className="flex-1 p-4 md:p-6 lg:p-8">
           <Card className="shadow-md">
             <CardHeader>
-              <CardTitle className="text-2xl">
-                {user.role === 'manager' ? "Gerenciar Vagas do Condomínio" : "Gerencie Suas Vagas"}
+              <CardTitle className="text-2xl flex items-center">
+                <Bookmark className="mr-3 h-7 w-7 text-primary" />
+                Histórico de Reservas
               </CardTitle>
               <CardDescription>
-                {user.role === 'manager'
-                  ? "Visualize e gerencie todas as vagas de estacionamento cadastradas no sistema."
-                  : "Visualize, edite a disponibilidade e gerencie suas vagas de estacionamento cadastradas."
-                }
+                Veja todas as suas reservas de vagas de estacionamento.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {isLoadingData ? (
+              {isLoadingReservations ? (
                 <div className="flex justify-center items-center py-10">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
-              ) : spotsToDisplay.length > 0 ? (
+              ) : userReservations.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {spotsToDisplay.map((spot) => {
-                    const reservationsForThisSpot = allReservations.filter(res => res.spotId === spot.id);
-                    return (
-                      <ParkingSpotCard 
-                        key={spot.id} 
-                        spot={spot} 
-                        reservationsForSpot={reservationsForThisSpot}
-                        showActions // Actions are relevant for owner/manager view
-                      />
-                    );
-                  })}
+                  {userReservations.map((res) => (
+                    <Card key={res.id} className="shadow-lg">
+                      <CardHeader>
+                        <CardTitle>
+                          Vaga: {res.spotDetails?.number || "N/A"}
+                        </CardTitle>
+                        <CardDescription>
+                          Local: {res.spotDetails?.location || "Não informado"}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-1 text-sm">
+                        <p><strong>Período:</strong></p>
+                        <p>
+                          De: {format(new Date(res.startTime), "dd/MM/yyyy", { locale: ptBR })}
+                        </p>
+                        <p>
+                          Até: {format(new Date(res.endTime), "dd/MM/yyyy", { locale: ptBR })}
+                        </p>
+                        {res.spotDetails?.ownerName && (
+                            <p className="text-xs text-muted-foreground pt-2">
+                                Vaga de: {res.spotDetails.ownerName}
+                            </p>
+                        )}
+                      </CardContent>
+                      {/* <CardFooter>
+                        <Button variant="outline" size="sm" disabled>Cancelar Reserva (Em breve)</Button>
+                      </CardFooter> */}
+                    </Card>
+                  ))}
                 </div>
               ) : (
                 <div className="text-center py-10">
-                   <ParkingSquare className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-lg font-medium text-muted-foreground">
-                    {user.role === 'manager'
-                      ? "Nenhuma vaga cadastrada no sistema ainda."
-                      : "Você ainda não cadastrou nenhuma vaga."}
-                  </p>
-                  <Link href="/my-spots/register" passHref legacyBehavior>
+                  <AlertTriangle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-lg font-medium text-muted-foreground">Você ainda não fez nenhuma reserva.</p>
+                  <Link href="/reservations" passHref legacyBehavior>
                     <Button className="mt-4">
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      {user.role === 'manager' ? "Cadastrar Primeira Vaga" : "Cadastrar Sua Primeira Vaga"}
+                      <CalendarCheck className="mr-2 h-4 w-4" />
+                      Reservar uma Vaga
                     </Button>
                   </Link>
                 </div>

@@ -34,12 +34,12 @@ import {
   SidebarGroup,
   SidebarGroupLabel
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, ParkingSquare, CalendarCheck, User as UserIcon, Loader2, ArrowLeft, Building, Users } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, User as UserIcon, Loader2, ArrowLeft, Building, Users, Bookmark } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@/types";
-import { getCondominiumById } from "@/lib/condominium-service"; // Importar
+import { getCondominiumById } from "@/lib/condominium-service"; 
 
 const profileFormSchema = z.object({
   name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres."),
@@ -53,7 +53,7 @@ const profileFormSchema = z.object({
     message: "Formato de telefone inválido (use (XX) XXXXX-XXXX).",
   }).describe("Seu número de telefone."),
   description: z.string().max(200, "A descrição não pode exceder 200 caracteres.").optional().describe("Uma breve descrição sobre você."),
-  condominiumName: z.string().optional().describe("Nome do seu condomínio."), // Campo apenas para exibição
+  condominiumName: z.string().optional().describe("Nome do seu condomínio."), 
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -77,7 +77,7 @@ export default function ProfilePage() {
       cpf: user?.cpf || "",
       phone: user?.phone || "",
       description: user?.description || "",
-      condominiumName: "", // Será preenchido no useEffect
+      condominiumName: "", 
     },
   });
 
@@ -102,7 +102,7 @@ export default function ProfilePage() {
         name: user.name || "",
         email: user.email || "",
         apartment: user.apartment || "",
-        dateOfBirth: user.dateOfBirth ? user.dateOfBirth.split('T')[0] : "", // Format for input type="date"
+        dateOfBirth: user.dateOfBirth ? user.dateOfBirth.split('T')[0] : "", 
         cpf: user.cpf || "",
         phone: user.phone || "",
         description: user.description || "",
@@ -117,7 +117,6 @@ export default function ProfilePage() {
 
     const profileDataToUpdate: Partial<User> = {
       name: data.name,
-      // email e condominiumId não são atualizados aqui
       apartment: data.apartment,
       dateOfBirth: data.dateOfBirth,
       cpf: data.cpf,
@@ -194,6 +193,14 @@ export default function ProfilePage() {
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
+             <SidebarMenuItem>
+                <Link href="/my-reservations" legacyBehavior passHref>
+                  <SidebarMenuButton tooltip="Minhas Reservas">
+                    <Bookmark />
+                    <span>Minhas Reservas</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
             <SidebarMenuItem>
               <Link href="/reservations" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Reservar Vaga">

@@ -3,10 +3,10 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { AvailableSpotsList, type ReservationDetails } from "@/components/parking/available-spots-list";
+import { AvailableSpotsList } from "@/components/parking/available-spots-list";
 import { getParkingSpots } from "@/lib/parking-spot-service"; 
 import type { ParkingSpot } from "@/types"; 
-import { useToast } from "@/hooks/use-toast";
+// import { useToast } from "@/hooks/use-toast"; // No longer directly used here
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
 import { UserNav } from "@/components/layout/user-nav";
@@ -23,16 +23,14 @@ import {
   SidebarGroup,
   SidebarGroupLabel
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, ParkingSquare, CalendarCheck, Loader2, Building, Users } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, Loader2, Building, Users, Bookmark } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
-// Importar getAllReservations para passar para AvailableSpotsList se necessário,
-// mas AvailableSpotsList já está buscando internamente.
+
 
 export default function ReservationsPage() {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
-  // const { toast } = useToast(); // toast é usado dentro de AvailableSpotsList
   const { isMobile } = useSidebar();
   const [spots, setSpots] = React.useState<ParkingSpot[]>([]);
   const [isLoadingSpots, setIsLoadingSpots] = React.useState(true);
@@ -46,7 +44,7 @@ export default function ReservationsPage() {
   React.useEffect(() => {
     if (isAuthenticated) {
       setIsLoadingSpots(true);
-      const spotsFromService = getParkingSpots(); // Busca inicial
+      const spotsFromService = getParkingSpots(); 
       setSpots(spotsFromService);
       setIsLoadingSpots(false);
     }
@@ -60,11 +58,6 @@ export default function ReservationsPage() {
     );
   }
 
-  // A lógica de reserva agora está encapsulada em AvailableSpotsList e reservation-service
-  // const handleReserveSpot = (spotId: string, details: ReservationDetails) => {
-  //   console.log("Reservando vaga:", spotId, "Detalhes:", details);
-  //   // ... lógica movida ...
-  // };
 
   return (
      <div className="flex min-h-screen w-full">
@@ -93,6 +86,14 @@ export default function ReservationsPage() {
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
+             <SidebarMenuItem>
+                <Link href="/my-reservations" legacyBehavior passHref>
+                  <SidebarMenuButton tooltip="Minhas Reservas">
+                    <Bookmark />
+                    <span>Minhas Reservas</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
             <SidebarMenuItem>
               <Link href="/reservations" legacyBehavior passHref>
                 <SidebarMenuButton isActive tooltip="Reservar Vaga">
@@ -149,8 +150,6 @@ export default function ReservationsPage() {
                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
                  </div>
               ) : (
-                // Passar os spots buscados para AvailableSpotsList.
-                // AvailableSpotsList cuidará de sua própria lógica de busca de reservas.
                 <AvailableSpotsList spots={spots} />
               )}
             </CardContent>
@@ -163,4 +162,3 @@ export default function ReservationsPage() {
     </div>
   );
 }
-

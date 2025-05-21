@@ -27,21 +27,19 @@ import { UserNav } from "@/components/layout/user-nav";
 import type { User, Condominium } from "@/types";
 import { getUsers, updateUser } from "@/lib/user-service";
 import { getCondominiumById, getCondominiums } from "@/lib/condominium-service";
-import { LayoutDashboard, ParkingSquare, CalendarCheck, Building, Users as UsersIcon, ArrowLeft, Loader2, Eye, Edit2, User as UserIconLucide, Mail, Building2, Calendar as CalendarIconLucide, Hash, PhoneIcon } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, Building, Users as UsersIcon, ArrowLeft, Loader2, Eye, Edit2, User as UserIconLucide, Mail, Building2, Calendar as CalendarIconLucide, Hash, PhoneIcon, Bookmark } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
   Dialog,
@@ -50,7 +48,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -170,7 +167,7 @@ export default function ManageUsersPage() {
       name: data.name,
       apartment: data.apartment,
       role: data.role,
-      condominiumId: data.role === 'resident' ? data.condominiumId : undefined, // Condo ID only if resident
+      condominiumId: data.role === 'resident' ? data.condominiumId : undefined, 
       dateOfBirth: data.dateOfBirth,
       cpf: data.cpf,
       phone: data.phone,
@@ -181,8 +178,8 @@ export default function ManageUsersPage() {
 
     if (updatedUser) {
       setAllUsers(prevUsers => prevUsers.map(u => u.id === updatedUser.id ? updatedUser : u));
-      if (currentUser?.id === updatedUser.id) { // If manager edits themselves
-        setAuthUser(updatedUser); // Update auth context user
+      if (currentUser?.id === updatedUser.id) { 
+        setAuthUser(updatedUser); 
       }
       toast({ title: "Usuário Atualizado", description: `Os dados de ${updatedUser.name} foram atualizados.` });
       setIsEditDialogOpen(false);
@@ -230,6 +227,14 @@ export default function ManageUsersPage() {
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
+             <SidebarMenuItem>
+                <Link href="/my-reservations" legacyBehavior passHref>
+                  <SidebarMenuButton tooltip="Minhas Reservas">
+                    <Bookmark />
+                    <span>Minhas Reservas</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
             <SidebarMenuItem>
               <Link href="/reservations" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Reservar Vaga">
@@ -349,7 +354,6 @@ export default function ManageUsersPage() {
         </footer>
       </SidebarInset>
 
-      {/* View User Dialog */}
       {selectedUserForView && (
         <AlertDialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
           <AlertDialogContent>
@@ -381,7 +385,6 @@ export default function ManageUsersPage() {
         </AlertDialog>
       )}
 
-      {/* Edit User Dialog */}
       {selectedUserForEdit && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="sm:max-w-lg">
@@ -535,11 +538,6 @@ export default function ManageUsersPage() {
           </DialogContent>
         </Dialog>
       )}
-
     </div>
   );
 }
-
-    
-
-    

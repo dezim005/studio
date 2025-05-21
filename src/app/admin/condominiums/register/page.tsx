@@ -34,7 +34,7 @@ import {
   SidebarGroup,
   SidebarGroupLabel
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, ParkingSquare, CalendarCheck, ArrowLeft, Loader2, Building, Users, PlusCircle } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, ArrowLeft, Loader2, Building, Users, Bookmark, PlusCircle } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -82,7 +82,7 @@ export default function RegisterCondominiumPage() {
         description: `O condomínio "${data.name}" foi cadastrado com sucesso.`,
       });
       form.reset();
-      // router.push("/admin/condominiums"); // Opcional: redirecionar para lista de condomínios
+      // router.push("/admin/condominiums"); 
     } catch (error) {
       toast({
         title: "Falha no Cadastro",
@@ -128,6 +128,14 @@ export default function RegisterCondominiumPage() {
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
+             <SidebarMenuItem>
+                <Link href="/my-reservations" legacyBehavior passHref>
+                  <SidebarMenuButton tooltip="Minhas Reservas">
+                    <Bookmark />
+                    <span>Minhas Reservas</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
             <SidebarMenuItem>
               <Link href="/reservations" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Reservar Vaga">

@@ -17,13 +17,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 import { addReservation, getAllReservations } from "@/lib/reservation-service";
 import { getParkingSpots } from "@/lib/parking-spot-service";
-import { SpotReservationDialog } from "./spot-reservation-dialog"; // Novo componente
+import { SpotReservationDialog } from "./spot-reservation-dialog"; 
 import type { DateRange } from "react-day-picker";
 import { startOfDay, endOfDay } from "date-fns";
 
 
 interface AvailableSpotsListProps {
-  spots: ParkingSpot[];
+  spots: ParkingSpot[]; // Initial spots passed from parent page
 }
 
 export function AvailableSpotsList({ spots: initialSpots }: AvailableSpotsListProps) {
@@ -45,14 +45,13 @@ export function AvailableSpotsList({ spots: initialSpots }: AvailableSpotsListPr
   React.useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      // Usar initialSpots que vêm da página, pois a página já busca do service
-      setSpots(initialSpots);
+      setSpots(initialSpots); // Use initialSpots from props
       const fetchedReservations = getAllReservations();
       setAllReservations(fetchedReservations);
       setIsLoading(false);
     };
     fetchData();
-  }, [initialSpots]);
+  }, [initialSpots]); // Depend on initialSpots
 
   const filteredSpots = React.useMemo(() => {
     return spots.filter(spot => {
@@ -60,7 +59,8 @@ export function AvailableSpotsList({ spots: initialSpots }: AvailableSpotsListPr
                             spot.location.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesType = filterType === 'all' || spot.type === filterType;
       
-      // Mostrar apenas vagas que estão marcadas como disponíveis E têm alguma definição de disponibilidade
+      // Show spots that are owner-available and have some availability configured
+      // The detailed booking status (fully_booked etc) will be handled by ParkingSpotCard
       return spot.isAvailable && spot.availability && spot.availability.length > 0 && matchesSearch && matchesType;
     });
   }, [spots, searchTerm, filterType]);
@@ -96,12 +96,12 @@ export function AvailableSpotsList({ spots: initialSpots }: AvailableSpotsListPr
         title: "Reserva Confirmada!",
         description: result.message,
       });
-      // Rebuscar dados para atualizar a UI
-      const updatedSpots = getParkingSpots();
+      // Re-fetch data to update UI, including reservations to update card statuses
+      const updatedSpots = getParkingSpots(); // Re-fetch spots
       setSpots(updatedSpots);
-      const updatedReservations = getAllReservations();
+      const updatedReservations = getAllReservations(); // Re-fetch all reservations
       setAllReservations(updatedReservations);
-      setIsReservationDialogOpen(false); // Fechar dialog
+      setIsReservationDialogOpen(false); 
     } else {
       toast({
         title: "Falha na Reserva",
@@ -146,19 +146,22 @@ export function AvailableSpotsList({ spots: initialSpots }: AvailableSpotsListPr
             <SelectItem value="motorcycle">Moto</SelectItem>
           </SelectContent>
         </Select>
-        {/* DateRangePicker removido daqui */}
       </div>
 
       {filteredSpots.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredSpots.map((spot) => (
-            <ParkingSpotCard
-              key={spot.id}
-              spot={spot}
-              showActions
-              onBookSpotClick={() => handleOpenReservationDialog(spot)}
-            />
-          ))}
+          {filteredSpots.map((spot) => {
+            const reservationsForThisSpot = allReservations.filter(res => res.spotId === spot.id);
+            return (
+              <ParkingSpotCard
+                key={spot.id}
+                spot={spot}
+                reservationsForSpot={reservationsForThisSpot} // Pass reservations for this spot
+                showActions
+                onBookSpotClick={() => handleOpenReservationDialog(spot)}
+              />
+            );
+          })}
         </div>
       ) : (
         <div className="text-center py-10 border rounded-md bg-card">
@@ -171,7 +174,7 @@ export function AvailableSpotsList({ spots: initialSpots }: AvailableSpotsListPr
       {selectedSpotForDialog && (
         <SpotReservationDialog
           spot={selectedSpotForDialog}
-          allReservations={allReservations}
+          allReservations={allReservations.filter(res => res.spotId === selectedSpotForDialog.id)} // Pass only relevant reservations
           isOpen={isReservationDialogOpen}
           onOpenChange={setIsReservationDialogOpen}
           onConfirmReservation={handleConfirmReservation}

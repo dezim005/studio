@@ -1,20 +1,21 @@
 
-import type { ParkingSpot } from "@/types";
+import type { ParkingSpot, Reservation } from "@/types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { SpotStatusBadge } from "./spot-status-badge";
+import { SpotStatusBadge, type SpotBookingStatus } from "./spot-status-badge";
+import { isSpotFullyBooked } from "@/lib/reservation-service"; // Import helper
 import { Car, MapPin, ParkingCircle, Tag, CalendarDays, User as UserIconLucide, Eye } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context"; 
 
 interface ParkingSpotCardProps {
   spot: ParkingSpot;
+  reservationsForSpot?: Reservation[]; // All reservations for this specific spot
   showActions?: boolean;
-  // onReserve prop removida, substituída por onBookSpotClick
   onBookSpotClick?: (spot: ParkingSpot) => void; 
 }
 
-export function ParkingSpotCard({ spot, showActions = false, onBookSpotClick }: ParkingSpotCardProps) {
+export function ParkingSpotCard({ spot, reservationsForSpot = [], showActions = false, onBookSpotClick }: ParkingSpotCardProps) {
   const { user } = useAuth(); 
 
   const spotTypeTranslations: Record<ParkingSpot['type'], string> = {
@@ -25,8 +26,19 @@ export function ParkingSpotCard({ spot, showActions = false, onBookSpotClick }: 
   };
 
   const canCurrentUserManage = user && spot.ownerId === user.id;
-  // Uma vaga é "bookable" na lista se estiver disponível e tiver disponibilidade definida
-  const isGenerallyBookable = spot.isAvailable && spot.availability && spot.availability.length > 0;
+
+  let currentBookingStatus: SpotBookingStatus = 'available';
+  if (!spot.isAvailable) {
+    currentBookingStatus = 'unavailable_by_owner';
+  } else if (!spot.availability || spot.availability.length === 0) {
+    currentBookingStatus = 'not_configured';
+  } else if (isSpotFullyBooked(spot, reservationsForSpot)) {
+    currentBookingStatus = 'fully_booked';
+  }
+
+  const isBookableActionActive = 
+    currentBookingStatus === 'available' && 
+    onBookSpotClick;
 
   return (
     <Card className="w-full shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col justify-between">
@@ -36,7 +48,7 @@ export function ParkingSpotCard({ spot, showActions = false, onBookSpotClick }: 
             <CardTitle className="text-2xl font-semibold text-primary flex items-center">
               <ParkingCircle className="mr-2 h-6 w-6" /> Vaga {spot.number}
             </CardTitle>
-            <SpotStatusBadge isAvailable={spot.isAvailable} />
+            <SpotStatusBadge status={currentBookingStatus} />
           </div>
           <CardDescription className="flex items-center text-muted-foreground pt-1">
             <MapPin className="mr-2 h-4 w-4" /> {spot.location}
@@ -56,29 +68,26 @@ export function ParkingSpotCard({ spot, showActions = false, onBookSpotClick }: 
           {spot.description && (
              <p className="text-sm text-muted-foreground pt-1 italic">"{spot.description}"</p>
           )}
-           {!spot.availability || spot.availability.length === 0 && spot.isAvailable && (
+           {currentBookingStatus === 'not_configured' && (
             <p className="text-xs text-orange-600 dark:text-orange-400 pt-1">Disponibilidade não definida pelo proprietário.</p>
           )}
         </CardContent>
       </div>
       {showActions && (
         <CardFooter className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
-          {isGenerallyBookable && onBookSpotClick && (
+          {isBookableActionActive ? (
             <Button 
-              onClick={() => onBookSpotClick(spot)} 
+              onClick={() => onBookSpotClick && onBookSpotClick(spot)} 
               className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground"
             >
               <Eye className="mr-2 h-4 w-4" /> Ver Disponibilidade e Reservar
             </Button>
-          )}
-          {!isGenerallyBookable && spot.isAvailable && (
+          ) : (
              <Button variant="outline" disabled  className="w-full sm:w-auto">
-              Indisponível para Reserva
-            </Button>
-          )}
-           {!spot.isAvailable && ( // Vaga mestre está indisponível
-             <Button variant="outline" disabled  className="w-full sm:w-auto">
-              Vaga Indisponível
+              {currentBookingStatus === 'unavailable_by_owner' ? 'Vaga Indisponível' :
+               currentBookingStatus === 'not_configured' ? 'Indisponível para Reserva' :
+               currentBookingStatus === 'fully_booked' ? 'Totalmente Reservada' :
+               'Indisponível para Reserva'}
             </Button>
           )}
           {canCurrentUserManage && ( 

@@ -19,13 +19,13 @@ import {
   SidebarGroup,
   SidebarGroupLabel
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, ParkingSquare, CalendarCheck, ArrowLeft, Loader2, Building, Users } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, ArrowLeft, Loader2, Building, Users, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 
 export default function RegisterSpotPage() {
-  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth(); // Adicionado user
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth(); 
   const router = useRouter();
   const { isMobile } = useSidebar();
 
@@ -35,7 +35,7 @@ export default function RegisterSpotPage() {
     }
   }, [isAuthenticated, isAuthLoading, router]);
 
-  if (isAuthLoading || !isAuthenticated || !user) { // Adicionado !user
+  if (isAuthLoading || !isAuthenticated || !user) { 
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -70,6 +70,14 @@ export default function RegisterSpotPage() {
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
+             <SidebarMenuItem>
+                <Link href="/my-reservations" legacyBehavior passHref>
+                  <SidebarMenuButton tooltip="Minhas Reservas">
+                    <Bookmark />
+                    <span>Minhas Reservas</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
             <SidebarMenuItem>
               <Link href="/reservations" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Reservar Vaga">

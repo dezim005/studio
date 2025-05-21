@@ -21,10 +21,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ParkingSpotCard } from "@/components/parking/parking-spot-card";
 import { Logo } from "@/components/logo";
 import { UserNav } from "@/components/layout/user-nav";
-import type { ParkingSpot, Reservation } from "@/types"; // Adicionado Reservation
+import type { ParkingSpot, Reservation } from "@/types"; 
 import { getParkingSpots } from "@/lib/parking-spot-service"; 
-import { getAllReservations } from "@/lib/reservation-service"; // Adicionado
-import { LayoutDashboard, ParkingSquare, CalendarCheck, Search, Filter, List, Map, Loader2, Building, Users } from "lucide-react";
+import { getAllReservations } from "@/lib/reservation-service"; 
+import { LayoutDashboard, ParkingSquare, CalendarCheck, Search, List, Map, Loader2, Building, Users, Bookmark } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -36,19 +36,18 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
-import type { DateRange } from "react-day-picker"; // Adicionado
-import { startOfDay, endOfDay } from "date-fns"; // Adicionado
+import { startOfDay, endOfDay } from "date-fns"; 
 
 export default function DashboardPage() {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
 
   const [spots, setSpots] = React.useState<ParkingSpot[]>([]);
-  const [allReservations, setAllReservations] = React.useState<Reservation[]>([]); // Estado para reservas
-  const [isLoadingData, setIsLoadingData] = React.useState(true); // Estado de carregamento unificado
+  const [allReservations, setAllReservations] = React.useState<Reservation[]>([]); 
+  const [isLoadingData, setIsLoadingData] = React.useState(true); 
   const [searchTerm, setSearchTerm] = React.useState("");
   const [filterType, setFilterType] = React.useState<string>("all");
-  const [filterAvailability, setFilterAvailability] = React.useState<string>("all"); // "all", "available", "occupied" (para o período atual)
+  const [filterAvailability, setFilterAvailability] = React.useState<string>("all"); 
   const [viewMode, setViewMode] = React.useState<"list" | "map">("list");
 
   const { isMobile } = useSidebar();
@@ -64,7 +63,7 @@ export default function DashboardPage() {
       setIsLoadingData(true);
       const spotsFromService = getParkingSpots();
       setSpots(spotsFromService);
-      const reservationsFromService = getAllReservations(); // Buscar todas as reservas
+      const reservationsFromService = getAllReservations(); 
       setAllReservations(reservationsFromService);
       setIsLoadingData(false);
     }
@@ -78,13 +77,11 @@ export default function DashboardPage() {
     );
   }
 
-  // Função para verificar se uma vaga está ocupada no momento atual (ou hoje)
   const isSpotOccupiedNow = (spot: ParkingSpot): boolean => {
     const now = new Date();
     const todayStart = startOfDay(now);
     const todayEnd = endOfDay(now);
 
-    // Verifica se há slots de disponibilidade que cobrem hoje
     const hasAvailabilityToday = spot.availability?.some(slot => {
         const slotStart = startOfDay(new Date(slot.startTime));
         const slotEnd = endOfDay(new Date(slot.endTime));
@@ -92,20 +89,16 @@ export default function DashboardPage() {
     }) || false;
 
     if (!hasAvailabilityToday && spot.availability && spot.availability.length > 0) {
-        // Se tem slots definidos mas nenhum para hoje, considera ocupada para o filtro "available"
         return true; 
     }
     if ((!spot.availability || spot.availability.length === 0) && spot.isAvailable) {
-      // Se está "isAvailable" mas não tem slots definidos, não pode ser reservada, então não é "available" no filtro.
-      return true; // Ou false, dependendo de como queremos tratar isso. Por ora, se não tem slot, não está "available for reservation"
+      return true; 
     }
-
 
     const spotReservations = allReservations.filter(r => r.spotId === spot.id);
     return spotReservations.some(res => {
       const resStart = new Date(res.startTime);
       const resEnd = new Date(res.endTime);
-      // Ocupada se 'now' está dentro do intervalo de uma reserva
       return resStart <= now && resEnd >= now;
     });
   };
@@ -124,15 +117,10 @@ export default function DashboardPage() {
             matchesAvailabilityFilter = !spot.isAvailable || isOccupied || (!spot.availability || spot.availability.length === 0) ;
         }
     }
-    
+    // Only show spots marked as available by owner for the main dashboard, detailed status inside card
     return spot.isAvailable && matchesSearch && matchesType && matchesAvailabilityFilter;
   });
 
-  // A lógica de reserva agora é tratada em AvailableSpotsList e ReservationPage
-  // const handleReserveSpot = (spotId: string) => {
-  //   alert(`Reservando vaga ${spotId}. Redirecionando para a página de reserva...`);
-  //   router.push(`/reservations?spotId=${spotId}`); 
-  // };
 
   return (
     <div className="flex min-h-screen w-full">
@@ -161,6 +149,14 @@ export default function DashboardPage() {
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
+             <SidebarMenuItem>
+                <Link href="/my-reservations" legacyBehavior passHref>
+                  <SidebarMenuButton tooltip="Minhas Reservas">
+                    <Bookmark />
+                    <span>Minhas Reservas</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
             <SidebarMenuItem>
               <Link href="/reservations" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Reservar Vaga">
@@ -264,11 +260,17 @@ export default function DashboardPage() {
               ) : filteredSpots.length > 0 ? (
                  viewMode === 'list' ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredSpots.map((spot) => (
-                      // O painel principal apenas exibe, não permite reservar diretamente daqui.
-                      // A prop onReserve não é passada, então o botão de reserva não aparecerá.
-                      <ParkingSpotCard key={spot.id} spot={spot} showActions={false} />
-                    ))}
+                    {filteredSpots.map((spot) => {
+                      const reservationsForThisSpot = allReservations.filter(res => res.spotId === spot.id);
+                      return (
+                        <ParkingSpotCard 
+                          key={spot.id} 
+                          spot={spot} 
+                          reservationsForSpot={reservationsForThisSpot}
+                          showActions={false} // No direct booking from dashboard
+                        />
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-64 border rounded-md bg-muted/50">
@@ -292,4 +294,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

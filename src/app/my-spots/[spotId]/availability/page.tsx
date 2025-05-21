@@ -5,8 +5,8 @@ import * as React from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { SpotAvailabilityCalendar } from "@/components/parking/spot-availability-calendar";
-import { getSpotById, updateSpot } from "@/lib/parking-spot-service"; // Atualizado
-import type { ParkingSpot, AvailabilitySlot } from "@/types"; // Adicionado AvailabilitySlot
+import { getSpotById, updateSpot } from "@/lib/parking-spot-service"; 
+import type { ParkingSpot, AvailabilitySlot } from "@/types"; 
 import { Logo } from "@/components/logo";
 import { UserNav } from "@/components/layout/user-nav";
 import {
@@ -22,11 +22,11 @@ import {
   SidebarGroup,
   SidebarGroupLabel
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, ParkingSquare, CalendarCheck, ArrowLeft, AlertTriangle, Loader2, Building, Users } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, ArrowLeft, AlertTriangle, Loader2, Building, Users, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth-context";
-import { useToast } from "@/hooks/use-toast"; // Importar useToast
+import { useToast } from "@/hooks/use-toast"; 
 
 
 export default function ManageSpotAvailabilityPage() {
@@ -36,7 +36,7 @@ export default function ManageSpotAvailabilityPage() {
   const spotId = params.spotId as string;
   const [spot, setSpot] = React.useState<ParkingSpot | null | undefined>(undefined);
   const { isMobile } = useSidebar();
-  const { toast } = useToast(); // Inicializar toast
+  const { toast } = useToast(); 
 
   React.useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
@@ -50,7 +50,7 @@ export default function ManageSpotAvailabilityPage() {
       if (foundSpot && user.role === 'resident' && foundSpot.ownerId !== user.id) {
         setSpot(null); 
       } else {
-        setTimeout(() => setSpot(foundSpot || null), 300); // Simular pequeno delay
+        setTimeout(() => setSpot(foundSpot || null), 300); 
       }
     } else if (!isAuthenticated && !isAuthLoading) {
        setSpot(null);
@@ -60,9 +60,9 @@ export default function ManageSpotAvailabilityPage() {
   const handleSaveAvailability = async (updatedAvailability: AvailabilitySlot[]) => {
     if (!spot) return;
     try {
-      const updatedSpot = updateSpot(spot.id, { availability: updatedAvailability });
-      if (updatedSpot) {
-        setSpot(updatedSpot); // Atualiza o estado local com a vaga atualizada
+      const updatedSpotData = updateSpot(spot.id, { availability: updatedAvailability });
+      if (updatedSpotData) {
+        setSpot(updatedSpotData); 
         toast({
           title: "Disponibilidade Atualizada!",
           description: `A disponibilidade para a vaga ${spot.number} foi salva.`,
@@ -147,6 +147,14 @@ export default function ManageSpotAvailabilityPage() {
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
+             <SidebarMenuItem>
+                <Link href="/my-reservations" legacyBehavior passHref>
+                  <SidebarMenuButton tooltip="Minhas Reservas">
+                    <Bookmark />
+                    <span>Minhas Reservas</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
             <SidebarMenuItem>
               <Link href="/reservations" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Reservar Vaga">

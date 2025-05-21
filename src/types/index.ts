@@ -11,9 +11,10 @@ export interface ParkingSpot {
   type: 'compact' | 'standard' | 'suv' | 'motorcycle';
   location: string;
   isAvailable: boolean;
-  ownerId?: string; // Optional: ID of the resident who owns/lists the spot
+  ownerId?: string; // ID do residente que cadastra/possui a vaga
   currentReservationId?: string | null;
   availability?: AvailabilitySlot[];
+  description?: string; // Para as "Observações Adicionais"
 }
 
 export interface AvailabilitySlot {
@@ -48,4 +49,3 @@ export interface User {
   description?: string;
   condominiumId?: string; // ID do condomínio ao qual o usuário pertence
 }
-

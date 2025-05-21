@@ -5,8 +5,8 @@ import * as React from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { SpotAvailabilityCalendar } from "@/components/parking/spot-availability-calendar";
-import { getSpotById } from "@/lib/mock-data";
-import type { ParkingSpot } from "@/types";
+import { getSpotById, updateSpot } from "@/lib/parking-spot-service"; // Atualizado
+import type { ParkingSpot, AvailabilitySlot } from "@/types"; // Adicionado AvailabilitySlot
 import { Logo } from "@/components/logo";
 import { UserNav } from "@/components/layout/user-nav";
 import {
@@ -26,6 +26,7 @@ import { LayoutDashboard, ParkingSquare, CalendarCheck, ArrowLeft, AlertTriangle
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth-context";
+import { useToast } from "@/hooks/use-toast"; // Importar useToast
 
 
 export default function ManageSpotAvailabilityPage() {
@@ -35,6 +36,7 @@ export default function ManageSpotAvailabilityPage() {
   const spotId = params.spotId as string;
   const [spot, setSpot] = React.useState<ParkingSpot | null | undefined>(undefined);
   const { isMobile } = useSidebar();
+  const { toast } = useToast(); // Inicializar toast
 
   React.useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
@@ -46,14 +48,38 @@ export default function ManageSpotAvailabilityPage() {
     if (isAuthenticated && user && spotId) {
       const foundSpot = getSpotById(spotId);
       if (foundSpot && user.role === 'resident' && foundSpot.ownerId !== user.id) {
-        setSpot(null); // Resident cannot manage a spot they don't own
+        setSpot(null); 
       } else {
-        setTimeout(() => setSpot(foundSpot || null), 500); // Simulate loading
+        setTimeout(() => setSpot(foundSpot || null), 300); // Simular pequeno delay
       }
     } else if (!isAuthenticated && !isAuthLoading) {
-       setSpot(null); // Should not happen if auth guard works, but safety
+       setSpot(null);
     }
   }, [spotId, isAuthenticated, user, isAuthLoading]);
+
+  const handleSaveAvailability = async (updatedAvailability: AvailabilitySlot[]) => {
+    if (!spot) return;
+    try {
+      const updatedSpot = updateSpot(spot.id, { availability: updatedAvailability });
+      if (updatedSpot) {
+        setSpot(updatedSpot); // Atualiza o estado local com a vaga atualizada
+        toast({
+          title: "Disponibilidade Atualizada!",
+          description: `A disponibilidade para a vaga ${spot.number} foi salva.`,
+        });
+      } else {
+        throw new Error("Falha ao encontrar a vaga para atualizar.");
+      }
+    } catch (error) {
+      toast({
+        title: "Falha ao Salvar",
+        description: "Ocorreu um erro ao salvar a disponibilidade da vaga.",
+        variant: "destructive",
+      });
+      console.error("Erro ao salvar disponibilidade:", error);
+    }
+  };
+
 
   if (isAuthLoading || !isAuthenticated || user === null || spot === undefined) {
     return (
@@ -168,7 +194,7 @@ export default function ManageSpotAvailabilityPage() {
         </header>
 
         <main className="flex-1 p-4 md:p-6 lg:p-8">
-          <SpotAvailabilityCalendar spot={spot} />
+          <SpotAvailabilityCalendar spot={spot} onSave={handleSaveAvailability} />
         </main>
         <footer className="border-t p-4 text-center text-sm text-muted-foreground">
           © {new Date().getFullYear()} Vaga Livre. Todos os direitos reservados.

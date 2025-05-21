@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ParkingSpotCard } from "@/components/parking/parking-spot-card";
 import type { ParkingSpot } from "@/types";
-import { mockParkingSpots } from "@/lib/mock-data";
+import { getParkingSpots } from "@/lib/parking-spot-service"; // Atualizado
 import { PlusCircle, ParkingSquare, LayoutDashboard, CalendarCheck, Loader2, Building, Users } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { UserNav } from "@/components/layout/user-nav";
@@ -31,12 +31,23 @@ export default function MySpotsPage() {
   const { isAuthenticated, user, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
   const { isMobile } = useSidebar();
+  const [allSpots, setAllSpots] = React.useState<ParkingSpot[]>([]);
+  const [isLoadingSpots, setIsLoadingSpots] = React.useState(true);
 
   React.useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
       router.push("/login");
     }
   }, [isAuthenticated, isAuthLoading, router]);
+
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      setIsLoadingSpots(true);
+      const spotsFromService = getParkingSpots();
+      setAllSpots(spotsFromService);
+      setIsLoadingSpots(false);
+    }
+  }, [isAuthenticated]);
 
   if (isAuthLoading || !isAuthenticated || !user) {
     return (
@@ -47,8 +58,8 @@ export default function MySpotsPage() {
   }
 
   const spotsToDisplay = user.role === 'manager'
-    ? mockParkingSpots // Manager sees all spots
-    : mockParkingSpots.filter(spot => spot.ownerId === user.id); // Resident sees only their spots
+    ? allSpots
+    : allSpots.filter(spot => spot.ownerId === user.id);
 
   return (
     <div className="flex min-h-screen w-full">
@@ -138,7 +149,11 @@ export default function MySpotsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {spotsToDisplay.length > 0 ? (
+              {isLoadingSpots ? (
+                <div className="flex justify-center items-center py-10">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : spotsToDisplay.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {spotsToDisplay.map((spot) => (
                     <ParkingSpotCard key={spot.id} spot={spot} showActions />

@@ -22,7 +22,7 @@ import { ParkingSpotCard } from "@/components/parking/parking-spot-card";
 import { Logo } from "@/components/logo";
 import { UserNav } from "@/components/layout/user-nav";
 import type { ParkingSpot } from "@/types";
-import { mockParkingSpots } from "@/lib/mock-data";
+import { getParkingSpots } from "@/lib/parking-spot-service"; // Atualizado
 import { LayoutDashboard, ParkingSquare, CalendarCheck, Search, Filter, List, Map, Loader2, Building, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -37,10 +37,11 @@ import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
-  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth(); // Adicionado user
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
 
-  const [spots, setSpots] = React.useState<ParkingSpot[]>(mockParkingSpots);
+  const [spots, setSpots] = React.useState<ParkingSpot[]>([]);
+  const [isLoadingSpots, setIsLoadingSpots] = React.useState(true);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [filterType, setFilterType] = React.useState<string>("all");
   const [filterAvailability, setFilterAvailability] = React.useState<string>("all");
@@ -55,20 +56,18 @@ export default function DashboardPage() {
   }, [isAuthenticated, isAuthLoading, router]);
 
   React.useEffect(() => {
-    if (!isAuthenticated) return;
-    const interval = setInterval(() => {
-      setSpots((prevSpots) =>
-        prevSpots.map((spot) =>
-          Math.random() > 0.9
-            ? { ...spot, isAvailable: !spot.isAvailable }
-            : spot
-        )
-      );
-    }, 5000);
-    return () => clearInterval(interval);
+    if (isAuthenticated) {
+      setIsLoadingSpots(true);
+      const spotsFromService = getParkingSpots();
+      setSpots(spotsFromService);
+      setIsLoadingSpots(false);
+      // Removido o setInterval que atualizava a disponibilidade aleatoriamente
+      // para evitar conflitos com dados reais.
+      // Uma atualização em tempo real mais robusta seria necessária (ex: WebSockets ou polling).
+    }
   }, [isAuthenticated]);
 
-  if (isAuthLoading || !isAuthenticated || !user) { // Adicionado !user
+  if (isAuthLoading || !isAuthenticated || !user) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -161,8 +160,8 @@ export default function DashboardPage() {
         <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
           <Card className="shadow-md">
             <CardHeader>
-              <CardTitle className="text-2xl">Disponibilidade de Vagas em Tempo Real</CardTitle>
-              <CardDescription>Veja as vagas de estacionamento atualmente disponíveis e ocupadas. Atualiza dinamicamente.</CardDescription>
+              <CardTitle className="text-2xl">Disponibilidade de Vagas</CardTitle>
+              <CardDescription>Veja as vagas de estacionamento atualmente disponíveis e ocupadas.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
@@ -212,7 +211,11 @@ export default function DashboardPage() {
 
               <Separator className="my-4"/>
 
-              {filteredSpots.length > 0 ? (
+              {isLoadingSpots ? (
+                <div className="flex justify-center items-center py-10">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : filteredSpots.length > 0 ? (
                  viewMode === 'list' ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredSpots.map((spot) => (

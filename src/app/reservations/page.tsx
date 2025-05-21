@@ -4,7 +4,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { AvailableSpotsList, type ReservationDetails } from "@/components/parking/available-spots-list";
-import { mockParkingSpots } from "@/lib/mock-data";
+import { getParkingSpots } from "@/lib/parking-spot-service"; // Atualizado
+import type { ParkingSpot } from "@/types"; // Importar ParkingSpot
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
@@ -27,10 +28,12 @@ import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 
 export default function ReservationsPage() {
-  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth(); // Adicionado user
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const { isMobile } = useSidebar();
+  const [spots, setSpots] = React.useState<ParkingSpot[]>([]);
+  const [isLoadingSpots, setIsLoadingSpots] = React.useState(true);
 
   React.useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
@@ -38,7 +41,16 @@ export default function ReservationsPage() {
     }
   }, [isAuthenticated, isAuthLoading, router]);
 
-  if (isAuthLoading || !isAuthenticated || !user) { // Adicionado !user
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      setIsLoadingSpots(true);
+      const spotsFromService = getParkingSpots();
+      setSpots(spotsFromService);
+      setIsLoadingSpots(false);
+    }
+  }, [isAuthenticated]);
+
+  if (isAuthLoading || !isAuthenticated || !user) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -134,7 +146,13 @@ export default function ReservationsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <AvailableSpotsList spots={mockParkingSpots} onReserveSpot={handleReserveSpot} />
+              {isLoadingSpots ? (
+                 <div className="flex justify-center items-center py-10">
+                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                 </div>
+              ) : (
+                <AvailableSpotsList spots={spots} onReserveSpot={handleReserveSpot} />
+              )}
             </CardContent>
           </Card>
         </main>

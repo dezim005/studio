@@ -5,6 +5,7 @@ import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useRouter } from "next/navigation"; // Importar useRouter
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,7 +28,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ParkingSquare } from "lucide-react";
+import { ParkingSquare, Loader2 } from "lucide-react"; // Importar Loader2
+import { useAuth } from "@/contexts/auth-context";
+import { addParkingSpot } from "@/lib/parking-spot-service";
 
 const spotRegistrationSchema = z.object({
   spotNumber: z.string().min(1, "Número da vaga é obrigatório"),
@@ -42,6 +45,10 @@ type SpotRegistrationFormValues = z.infer<typeof spotRegistrationSchema>;
 
 export function SpotRegistrationForm() {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const router = useRouter(); // Inicializar useRouter
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
   const form = useForm<SpotRegistrationFormValues>({
     resolver: zodResolver(spotRegistrationSchema),
     defaultValues: {
@@ -52,14 +59,40 @@ export function SpotRegistrationForm() {
   });
 
   async function onSubmit(data: SpotRegistrationFormValues) {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log("Dados de cadastro da vaga:", data);
-    toast({
-      title: "Vaga Cadastrada!",
-      description: `A vaga ${data.spotNumber} foi cadastrada com sucesso.`,
-      variant: "default"
-    });
-    form.reset();
+    if (!user) {
+      toast({
+        title: "Erro de Autenticação",
+        description: "Você precisa estar logado para cadastrar uma vaga.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsSubmitting(true);
+    await new Promise(resolve => setTimeout(resolve, 700)); // Simular chamada de API
+
+    try {
+      addParkingSpot({
+        number: data.spotNumber,
+        type: data.spotType,
+        location: data.locationDetails,
+        description: data.additionalNotes,
+        ownerId: user.id,
+      });
+      toast({
+        title: "Vaga Cadastrada!",
+        description: `A vaga ${data.spotNumber} foi cadastrada com sucesso.`,
+        variant: "default"
+      });
+      form.reset();
+      router.push("/my-spots"); // Redirecionar para a lista de vagas
+    } catch (error) {
+      toast({
+        title: "Falha no Cadastro",
+        description: "Ocorreu um erro ao cadastrar a vaga.",
+        variant: "destructive",
+      });
+    }
+    setIsSubmitting(false);
   }
 
   return (
@@ -162,8 +195,9 @@ export function SpotRegistrationForm() {
               )}
             />
             
-            <Button type="submit" className="w-full sm:w-auto" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? "Cadastrando..." : "Cadastrar Vaga"}
+            <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSubmitting ? "Cadastrando..." : "Cadastrar Vaga"}
             </Button>
           </form>
         </Form>

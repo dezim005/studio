@@ -80,22 +80,16 @@ export default function DashboardPage() {
   const isSpotOccupiedNow = (spot: ParkingSpot, spotSpecificReservations: Reservation[]): boolean => {
     const now = new Date();
     
-    // Check if owner marked it as generally unavailable for now based on defined slots
     const hasAvailabilityToday = spot.availability?.some(slot => {
         const slotStart = startOfDay(new Date(slot.startTime));
         const slotEnd = endOfDay(new Date(slot.endTime));
         return now >= slotStart && now <= slotEnd;
     }) || false;
 
-    // If there are availability slots, but none for today, consider it "occupied" by owner's definition
     if (spot.availability && spot.availability.length > 0 && !hasAvailabilityToday) {
         return true; 
     }
-    // If NO availability slots are defined AT ALL, but spot.isAvailable is true, it means owner wants it generally available
-    // but current booking status depends on reservations.
-    // If spot.isAvailable is false, it's occupied by owner.
-
-    // Check active reservations
+    
     return spotSpecificReservations.some(res => {
       const resStart = new Date(res.startTime);
       const resEnd = new Date(res.endTime);
@@ -113,17 +107,22 @@ export default function DashboardPage() {
     let matchesAvailabilityFilter = true;
     if (filterAvailability !== 'all') {
         const isOccupied = isSpotOccupiedNow(spot, spotSpecificReservations);
-        const isConfigured = spot.availability && spot.availability.length > 0;
-
+        // For the dashboard filter, "available" means the owner set it as generally available,
+        // it has some configuration, and it's not currently booked by a reservation.
         if (filterAvailability === 'available') {
-            // Available if owner marked as available, it's configured, AND not occupied by a reservation now
-            matchesAvailabilityFilter = spot.isAvailable && isConfigured && !isOccupied;
+            matchesAvailabilityFilter = spot.isAvailable && 
+                                        (spot.availability && spot.availability.length > 0) && 
+                                        !isOccupied;
         } else if (filterAvailability === 'occupied') {
-            // Occupied if owner marked as unavailable OR it's not configured OR it is occupied by a reservation now
-            matchesAvailabilityFilter = !spot.isAvailable || !isConfigured || isOccupied;
+            // Occupied if owner marked as unavailable OR it's not configured for availability
+            // OR it is currently occupied by a reservation.
+            matchesAvailabilityFilter = !spot.isAvailable || 
+                                        !(spot.availability && spot.availability.length > 0) || 
+                                        isOccupied;
         }
     }
-    // Only show spots marked as available by owner for the main dashboard, detailed status inside card
+    // Dashboard still shows spots that are generally available by owner.
+    // The card itself will show more detailed status like "fully_booked".
     return spot.isAvailable && matchesSearch && matchesType && matchesAvailabilityFilter;
   });
 
@@ -274,7 +273,7 @@ export default function DashboardPage() {
                             key={spot.id} 
                             spot={spot} 
                             reservationsForSpot={reservationsForThisSpot}
-                            showActions={false} // No direct booking from dashboard
+                            showActions={false} 
                           />
                         );
                       })}

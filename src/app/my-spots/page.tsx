@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ParkingSpotCard } from "@/components/parking/parking-spot-card";
 import type { ParkingSpot, Reservation } from "@/types";
 import { getParkingSpots } from "@/lib/parking-spot-service"; 
-import { getAllReservations } from "@/lib/reservation-service"; // Import to get all reservations
+import { getAllReservations } from "@/lib/reservation-service"; 
 import { PlusCircle, ParkingSquare, LayoutDashboard, CalendarCheck, Loader2, Building, Users, Bookmark } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { UserNav } from "@/components/layout/user-nav";
@@ -33,8 +33,8 @@ export default function MySpotsPage() {
   const router = useRouter();
   const { isMobile } = useSidebar();
   const [allSpots, setAllSpots] = React.useState<ParkingSpot[]>([]);
-  const [allReservations, setAllReservations] = React.useState<Reservation[]>([]); // State for all reservations
-  const [isLoadingData, setIsLoadingData] = React.useState(true); // Combined loading state
+  const [allReservations, setAllReservations] = React.useState<Reservation[]>([]);
+  const [isLoadingData, setIsLoadingData] = React.useState(true);
 
   React.useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
@@ -47,7 +47,7 @@ export default function MySpotsPage() {
       setIsLoadingData(true);
       const spotsFromService = getParkingSpots();
       setAllSpots(spotsFromService);
-      const reservationsFromService = getAllReservations(); // Fetch all reservations
+      const reservationsFromService = getAllReservations();
       setAllReservations(reservationsFromService);
       setIsLoadingData(false);
     }
@@ -177,7 +177,7 @@ export default function MySpotsPage() {
                           key={spot.id} 
                           spot={spot} 
                           reservationsForSpot={reservationsForThisSpot}
-                          showActions // Actions are relevant for owner/manager view
+                          showActions 
                         />
                       );
                     })}

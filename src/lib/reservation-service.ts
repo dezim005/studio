@@ -44,19 +44,17 @@ export function getReservationsBySpotId(spotId: string): Reservation[] {
 
 // Helper function para verificar se a reserva está dentro de um slot de disponibilidade
 function isWithinAvailabilitySlot(
-  requestedReservationStart: Date,
-  requestedReservationEnd: Date,
+  requestedReservationStart: Date, // Deve ser startOfDay
+  requestedReservationEnd: Date,   // Deve ser endOfDay
   availabilitySlots: AvailabilitySlot[]
 ): boolean {
   if (!availabilitySlots || availabilitySlots.length === 0) {
     return false;
   }
-  // Para reservas baseadas em dia, requestedReservationStart é startOfDay e requestedReservationEnd é endOfDay
   return availabilitySlots.some(slot => {
-    const slotStart = startOfDay(new Date(slot.startTime));
-    const slotEnd = endOfDay(new Date(slot.endTime)); // Assumindo que slot.endTime já é o fim do último dia
+    const slotStart = startOfDay(new Date(slot.startTime)); // Slot startTime é startOfDay
+    const slotEnd = endOfDay(new Date(slot.endTime));     // Slot endTime é endOfDay
     
-    // O período da reserva solicitada deve estar inteiramente contido em um slot de disponibilidade.
     return requestedReservationStart >= slotStart && requestedReservationEnd <= slotEnd;
   });
 }
@@ -64,7 +62,7 @@ function isWithinAvailabilitySlot(
 export async function addReservation(
   reservationData: Omit<Reservation, "id">
 ): Promise<{ success: boolean; message: string; reservation?: Reservation }> {
-  await new Promise(resolve => setTimeout(resolve, 300)); // Simular delay
+  await new Promise(resolve => setTimeout(resolve, 300)); 
 
   const spot = getSpotById(reservationData.spotId);
   if (!spot) {
@@ -90,8 +88,7 @@ export async function addReservation(
   const hasConflict = existingReservationsForSpot.some(existingRes => {
     const existingStart = startOfDay(new Date(existingRes.startTime));
     const existingEnd = endOfDay(new Date(existingRes.endTime));
-    // Conflito se: newStart < existingEnd AND newEnd > existingStart
-    return requestedStart < existingEnd && requestedEnd > existingStart;
+    return requestedStart <= existingEnd && requestedEnd >= existingStart; // Corrected conflict logic
   });
 
   if (hasConflict) {
@@ -101,8 +98,8 @@ export async function addReservation(
   const newReservation: Reservation = {
     id: `res-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
     ...reservationData,
-    startTime: requestedStart, // Garantir que estamos salvando startOfDay
-    endTime: requestedEnd,     // Garantir que estamos salvando endOfDay
+    startTime: requestedStart, 
+    endTime: requestedEnd,     
   };
 
   const allReservations = getAllReservations();
@@ -113,15 +110,15 @@ export async function addReservation(
 
 export function isSpotFullyBooked(spot: ParkingSpot, reservationsForSpot: Reservation[]): boolean {
   if (!spot.availability || spot.availability.length === 0) {
-    return false; // Não pode estar totalmente reservada se não há disponibilidade definida
+    return false; 
   }
 
-  const availableDaysSet = new Set<string>(); // Armazena os dias como strings 'yyyy-MM-dd'
+  const availableDaysSet = new Set<string>(); 
 
   spot.availability.forEach(slot => {
     const daysInSlot = eachDayOfInterval({
-      start: startOfDay(new Date(slot.startTime)),
-      end: startOfDay(new Date(slot.endTime)), // eachDayOfInterval é inclusivo
+      start: startOfDay(new Date(slot.startTime)), // startTime do slot é startOfDay
+      end: startOfDay(new Date(slot.endTime)),     // endTime do slot é endOfDay, então usamos startOfDay aqui para eachDayOfInterval
     });
     daysInSlot.forEach(day => {
       availableDaysSet.add(format(day, 'yyyy-MM-dd'));
@@ -129,21 +126,23 @@ export function isSpotFullyBooked(spot: ParkingSpot, reservationsForSpot: Reserv
   });
 
   if (availableDaysSet.size === 0) {
-    return false; // Nenhum dia efetivamente disponível
+    return false; 
   }
 
   for (const dayStr of availableDaysSet) {
-    const dayToCover = startOfDay(new Date(dayStr)); 
+    // Robust date reconstruction from yyyy-MM-dd string
+    const [year, month, dayNum] = dayStr.split('-').map(Number);
+    const dayToCover = startOfDay(new Date(year, month - 1, dayNum));
+    
     const isDayCoveredByReservation = reservationsForSpot.some(res => {
-      const resStart = startOfDay(new Date(res.startTime));
-      const resEnd = endOfDay(new Date(res.endTime)); // Usar endOfDay para a comparação de intervalo
-      // Verifica se dayToCover está dentro do intervalo [resStart, resEnd]
+      const resStart = startOfDay(new Date(res.startTime)); // Reservation startTime é startOfDay
+      const resEnd = endOfDay(new Date(res.endTime));       // Reservation endTime é endOfDay
       return dayToCover >= resStart && dayToCover <= resEnd;
     });
 
     if (!isDayCoveredByReservation) {
-      return false; // Encontrou um dia disponível que não está reservado
+      return false; 
     }
   }
-  return true; // Todos os dias disponíveis estão cobertos por reservas
+  return true; 
 }

@@ -66,12 +66,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4 sm:p-6 md:p-8">
-      <div className="max-w-md space-y-8 flex flex-col items-center"> {/* Removido w-full daqui */}
+    // Contêiner externo: centraliza verticalmente com items-center
+    <div className="flex min-h-screen items-center bg-background p-4 sm:p-6 md:p-8">
+      {/* Contêiner interno: max-w-md e mx-auto para centralização horizontal */}
+      <div className="max-w-md mx-auto space-y-8 flex flex-col items-center">
         <div className="flex justify-center">
           <Logo />
         </div>
-        <Card className="shadow-xl w-full"> {/* Mantido w-full aqui para o card ocupar o max-w-md do pai */}
+        <Card className="shadow-xl w-full">
           <CardHeader>
             <CardTitle className="text-2xl">Bem-vindo(a) de Volta!</CardTitle>
             <CardDescription>Insira suas credenciais para acessar o Vaga Livre.</CardDescription>

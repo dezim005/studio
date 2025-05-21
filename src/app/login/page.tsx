@@ -66,8 +66,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 sm:p-6 md:p-8">
-      <div className="max-w-md w-full space-y-8 flex flex-col items-center">
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="w-full max-w-md space-y-8 flex flex-col items-center p-4 sm:p-6 md:p-8">
         <div className="flex justify-center">
           <Logo />
         </div>
@@ -122,7 +122,7 @@ export default function LoginPage() {
             </p>
           </CardContent>
         </Card>
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="mt-8 text-center text-sm text-muted-foreground">
           © {new Date().getFullYear()} Vaga Livre. Todos os direitos reservados.
         </p>
       </div>

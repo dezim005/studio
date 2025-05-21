@@ -44,7 +44,7 @@ export default function LoginPage() {
 
   React.useEffect(() => {
     if (!isAuthLoading && isAuthenticated) {
-      router.push("/"); 
+      router.push("/");
     }
   }, [isAuthenticated, isAuthLoading, router]);
 
@@ -66,8 +66,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="w-full max-w-md space-y-8 flex flex-col items-center p-4 sm:p-6 md:p-8">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4 sm:p-6 md:p-8">
+      <div className="w-full max-w-md space-y-8 flex flex-col items-center">
         <div className="flex justify-center">
           <Logo />
         </div>

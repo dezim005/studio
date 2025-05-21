@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import type { ParkingSpot, Reservation } from "@/types"; // Adicionado Reservation
+import type { ParkingSpot, Reservation } from "@/types"; 
 import { ParkingSpotCard } from "./parking-spot-card";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,24 +20,22 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import type { DateRange } from "react-day-picker";
-import { addDays, format, startOfDay, endOfDay, isWithinInterval } from "date-fns"; // Adicionado startOfDay, endOfDay, isWithinInterval
+import { addDays, format, startOfDay, endOfDay } from "date-fns"; 
 import { ptBR } from 'date-fns/locale';
-import { Search, ParkingSquare, CalendarIcon, Loader2 } from "lucide-react"; // Adicionado Loader2
+import { Search, ParkingSquare, CalendarIcon, Loader2 } from "lucide-react"; 
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/auth-context"; // Adicionado useAuth
-import { addReservation, getAllReservations, getReservationsBySpotId } from "@/lib/reservation-service"; // Adicionado reservation-service
+import { useAuth } from "@/contexts/auth-context"; 
+import { addReservation, getAllReservations } from "@/lib/reservation-service"; 
 import { getParkingSpots } from "@/lib/parking-spot-service";
 
 
 interface AvailableSpotsListProps {
-  spots: ParkingSpot[]; // Spots iniciais, podem ser atualizados
-  onReserveSpot?: (spotId: string, details: ReservationDetails) => void; // Tornar opcional, pois o handleReserve será interno
+  spots: ParkingSpot[]; 
 }
 
 export interface ReservationDetails {
   dateRange: DateRange;
-  // Adicione outros detalhes se necessário, como horário específico dentro do dia
 }
 
 function DateRangePicker({
@@ -80,7 +78,7 @@ function DateRangePicker({
             selected={date}
             onSelect={onDateChange}
             numberOfMonths={2}
-            disabled={(day) => day < startOfDay(new Date())} // Desabilita dias anteriores ao dia de hoje
+            disabled={(day) => day < startOfDay(new Date())} 
             locale={ptBR}
           />
         </PopoverContent>
@@ -109,55 +107,42 @@ export function AvailableSpotsList({ spots: initialSpots }: AvailableSpotsListPr
   React.useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      // Não precisamos buscar spots aqui se eles são passados como prop e atualizados externamente
-      // Mas se quisermos buscar aqui, podemos:
-      // const fetchedSpots = getParkingSpots();
-      // setSpots(fetchedSpots);
-      setSpots(initialSpots); // Usar os spots passados inicialmente ou atualizados pela página pai
+      setSpots(initialSpots); 
 
       const fetchedReservations = getAllReservations();
       setAllReservations(fetchedReservations);
       setIsLoading(false);
     };
     fetchData();
-  }, [initialSpots]); // Re-fetch se os initialSpots mudarem (após reserva na página pai)
+  }, [initialSpots]);
 
 
   const isSpotBookableForSelectedRange = React.useCallback((spot: ParkingSpot, selectedRange: DateRange | undefined): boolean => {
     if (!selectedRange?.from || !user) return false;
-    if (!spot.isAvailable) return false; // Vaga mestre desabilitada
-    if (!spot.availability || spot.availability.length === 0) return false; // Sem slots de disponibilidade
+    if (!spot.isAvailable) return false; 
+    if (!spot.availability || spot.availability.length === 0) return false;
 
-    const reqStartTime = startOfDay(selectedRange.from);
-    // Para 'to', se for o mesmo dia, usamos endOfDay para cobrir o dia inteiro na verificação de conflito.
-    // Se for um range, o endTime da reserva será o fim do último dia.
-    const reqEndTime = selectedRange.to ? endOfDay(selectedRange.to) : endOfDay(selectedRange.from);
+    const reqReservationStart = startOfDay(selectedRange.from);
+    const reqReservationEnd = selectedRange.to ? endOfDay(selectedRange.to) : endOfDay(selectedRange.from);
 
-    // 1. Verificar se algum AvailabilitySlot cobre o período desejado
-    const hasCoveringSlot = spot.availability.some(slot => {
-      const slotStart = startOfDay(new Date(slot.startTime));
-      const slotEnd = endOfDay(new Date(slot.endTime)); // Assume que o slot de disponibilidade cobre dias inteiros
-      
-      // O período selecionado [reqStartTime, reqEndTime]
-      // O período do slot [slotStart, slotEnd]
-      // Verifica se há sobreposição e se o slot cobre o período requisitado
-      // Esta é uma verificação simplificada. A lógica exata está no addReservation.
-      return reqStartTime <= slotEnd && reqEndTime >= slotStart;
+    const isPeriodWithinAnySlot = spot.availability.some(slot => {
+        const slotStart = new Date(slot.startTime);
+        const slotEnd = new Date(slot.endTime);
+        // O slot de disponibilidade deve cobrir completamente o período da reserva (dias inteiros).
+        return slotStart <= reqReservationStart && slotEnd >= reqReservationEnd;
     });
 
-    if (!hasCoveringSlot) return false;
+    if (!isPeriodWithinAnySlot) return false;
 
-    // 2. Verificar se já existem reservas que conflitam TOTALMENTE com o período selecionado
-    // Esta lógica é para a UI. A verificação fina de conflito ocorre no backend/serviço.
     const spotReservations = allReservations.filter(r => r.spotId === spot.id);
-    const isBookedSolid = spotReservations.some(res => {
+    const hasConflict = spotReservations.some(res => {
         const resStart = new Date(res.startTime);
         const resEnd = new Date(res.endTime);
-        // Se a reserva existente cobre completamente o período desejado
-        return resStart <= reqStartTime && resEnd >= reqEndTime;
+        // Conflito se: reqReservationStart < resEnd E reqReservationEnd > resStart
+        return reqReservationStart < resEnd && reqReservationEnd > resStart;
     });
 
-    return !isBookedSolid; // É bookable se não estiver solidamente reservado
+    return !hasConflict;
   }, [user, allReservations]);
 
 
@@ -167,7 +152,6 @@ export function AvailableSpotsList({ spots: initialSpots }: AvailableSpotsListPr
                             spot.location.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesType = filterType === 'all' || spot.type === filterType;
       
-      // Só incluir na lista se a vaga estiver marcada como disponível e tiver slots de disponibilidade
       if (!spot.isAvailable || !spot.availability || spot.availability.length === 0) {
         return false;
       }
@@ -190,9 +174,8 @@ export function AvailableSpotsList({ spots: initialSpots }: AvailableSpotsListPr
     const reservationData = {
       spotId,
       userId: user.id,
-      startTime: dateRange.from,
-      endTime: dateRange.to || dateRange.from, // Se 'to' não estiver definido, é um dia único
-      // vehiclePlate: "ABC-123" // Poderia ser coletado em um modal mais complexo
+      startTime: startOfDay(dateRange.from), // Garante que é o início do dia
+      endTime: dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from), // Garante que é o fim do dia
     };
 
     const result = await addReservation(reservationData);
@@ -202,10 +185,9 @@ export function AvailableSpotsList({ spots: initialSpots }: AvailableSpotsListPr
         title: "Reserva Confirmada!",
         description: result.message,
       });
-      // Atualizar estado para refletir a nova reserva e potencial mudança de disponibilidade das vagas
-      const updatedSpots = getParkingSpots(); // Rebuscar spots
+      const updatedSpots = getParkingSpots(); 
       setSpots(updatedSpots);
-      const updatedReservations = getAllReservations(); // Rebuscar reservas
+      const updatedReservations = getAllReservations(); 
       setAllReservations(updatedReservations);
     } else {
       toast({
@@ -263,7 +245,7 @@ export function AvailableSpotsList({ spots: initialSpots }: AvailableSpotsListPr
                 key={spot.id} 
                 spot={spot} 
                 showActions 
-                onReserve={isBookable ? () => handleReserve(spot.id) : undefined}
+                onReserve={isBookable ? () => handleReserve(spot.id) : undefined} // Passa onReserve apenas se for reservável
                 isBookable={isBookable}
                 isReserving={isSubmittingReservation === spot.id}
               />
@@ -280,3 +262,4 @@ export function AvailableSpotsList({ spots: initialSpots }: AvailableSpotsListPr
     </div>
   );
 }
+

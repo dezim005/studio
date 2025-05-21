@@ -3,7 +3,7 @@ import type { ParkingSpot } from "@/types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SpotStatusBadge } from "./spot-status-badge";
-import { Car, MapPin, ParkingCircle, Tag, CalendarDays } from "lucide-react";
+import { Car, MapPin, ParkingCircle, Tag, CalendarDays, User as UserIconLucide } from "lucide-react"; // Adicionado UserIconLucide
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context"; 
 
@@ -41,9 +41,10 @@ export function ParkingSpotCard({ spot, showActions = false, onReserve }: Parkin
           <Tag className="mr-2 h-4 w-4 text-primary" />
           Tipo: <span className="font-medium ml-1 capitalize">{spotTypeTranslations[spot.type]}</span>
         </div>
-        {spot.ownerId && (
-          <div className="text-sm text-muted-foreground">
-            Anunciada por: Residente {spot.ownerId.slice(-3)} 
+        { (spot.ownerName || spot.ownerId) && ( // Mostrar se ownerName ou ownerId existir
+          <div className="text-sm text-muted-foreground flex items-center">
+            <UserIconLucide className="mr-2 h-4 w-4" />
+            Anunciada por: {spot.ownerName ? spot.ownerName : `Residente ${spot.ownerId?.slice(-4)}`}
           </div>
         )}
       </CardContent>

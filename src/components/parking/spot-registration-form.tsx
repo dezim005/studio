@@ -59,10 +59,10 @@ export function SpotRegistrationForm() {
   });
 
   async function onSubmit(data: SpotRegistrationFormValues) {
-    if (!user) {
+    if (!user || !user.name) { // Garantir que user e user.name existem
       toast({
         title: "Erro de Autenticação",
-        description: "Você precisa estar logado para cadastrar uma vaga.",
+        description: "Você precisa estar logado e seu nome de usuário deve estar disponível para cadastrar uma vaga.",
         variant: "destructive",
       });
       return;
@@ -77,6 +77,7 @@ export function SpotRegistrationForm() {
         location: data.locationDetails,
         description: data.additionalNotes,
         ownerId: user.id,
+        ownerName: user.name, // Passar o nome do usuário
       });
       toast({
         title: "Vaga Cadastrada!",

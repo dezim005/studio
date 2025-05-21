@@ -40,7 +40,7 @@ export function getParkingSpots(): ParkingSpot[] {
 }
 
 export function addParkingSpot(
-  spotData: Omit<ParkingSpot, "id" | "isAvailable" | "availability" | "currentReservationId"> & { ownerId: string }
+  spotData: Omit<ParkingSpot, "id" | "isAvailable" | "availability" | "currentReservationId"> & { ownerId: string; ownerName: string; }
 ): ParkingSpot {
   const spots = getParkingSpots();
   const newSpot: ParkingSpot = {
@@ -51,6 +51,7 @@ export function addParkingSpot(
     description: spotData.description,
     isAvailable: true, // Vagas novas são disponíveis por padrão
     ownerId: spotData.ownerId,
+    ownerName: spotData.ownerName, // Salvar o nome do proprietário
     currentReservationId: null,
     availability: [], // Disponibilidade vazia por padrão
   };

@@ -12,6 +12,7 @@ export interface ParkingSpot {
   location: string;
   isAvailable: boolean;
   ownerId?: string; // ID do residente que cadastra/possui a vaga
+  ownerName?: string; // Nome do residente que cadastra/possui a vaga
   currentReservationId?: string | null;
   availability?: AvailabilitySlot[];
   description?: string; // Para as "Observações Adicionais"

@@ -136,24 +136,26 @@ export default function ReservationsPage() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="text-2xl">Encontre e Reserve Sua Vaga</CardTitle>
-              <CardDescription>
-                Navegue pelas vagas disponíveis, filtre por suas preferências e faça uma reserva.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoadingSpots ? (
-                 <div className="flex justify-center items-center py-10">
-                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                 </div>
-              ) : (
-                <AvailableSpotsList spots={spots} />
-              )}
-            </CardContent>
-          </Card>
+        <main className="flex-1">
+          <div className="w-full max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6">
+            <Card className="shadow-md">
+              <CardHeader>
+                <CardTitle className="text-2xl">Encontre e Reserve Sua Vaga</CardTitle>
+                <CardDescription>
+                  Navegue pelas vagas disponíveis, filtre por suas preferências e faça uma reserva.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoadingSpots ? (
+                  <div className="flex justify-center items-center py-10">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : (
+                  <AvailableSpotsList spots={spots} />
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </main>
         <footer className="border-t p-4 text-center text-sm text-muted-foreground">
           © {new Date().getFullYear()} Vaga Livre. Todos os direitos reservados.

@@ -126,8 +126,10 @@ export default function RegisterSpotPage() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 lg:p-8">
-          <SpotRegistrationForm />
+        <main className="flex-1">
+          <div className="w-full max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <SpotRegistrationForm />
+          </div>
         </main>
         <footer className="border-t p-4 text-center text-sm text-muted-foreground">
           © {new Date().getFullYear()} Vaga Livre. Todos os direitos reservados.

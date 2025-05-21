@@ -148,68 +148,70 @@ export default function MyReservationsPage() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 lg:p-8">
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="text-2xl flex items-center">
-                <Bookmark className="mr-3 h-7 w-7 text-primary" />
-                Histórico de Reservas
-              </CardTitle>
-              <CardDescription>
-                Veja todas as suas reservas de vagas de estacionamento.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoadingReservations ? (
-                <div className="flex justify-center items-center py-10">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : userReservations.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {userReservations.map((res) => (
-                    <Card key={res.id} className="shadow-lg">
-                      <CardHeader>
-                        <CardTitle>
-                          Vaga: {res.spotDetails?.number || "N/A"}
-                        </CardTitle>
-                        <CardDescription>
-                          Local: {res.spotDetails?.location || "Não informado"}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-1 text-sm">
-                        <p><strong>Período:</strong></p>
-                        <p>
-                          De: {format(new Date(res.startTime), "dd/MM/yyyy", { locale: ptBR })}
-                        </p>
-                        <p>
-                          Até: {format(new Date(res.endTime), "dd/MM/yyyy", { locale: ptBR })}
-                        </p>
-                        {res.spotDetails?.ownerName && (
-                            <p className="text-xs text-muted-foreground pt-2">
-                                Vaga de: {res.spotDetails.ownerName}
-                            </p>
-                        )}
-                      </CardContent>
-                      {/* <CardFooter>
-                        <Button variant="outline" size="sm" disabled>Cancelar Reserva (Em breve)</Button>
-                      </CardFooter> */}
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-10">
-                  <AlertTriangle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-lg font-medium text-muted-foreground">Você ainda não fez nenhuma reserva.</p>
-                  <Link href="/reservations" passHref legacyBehavior>
-                    <Button className="mt-4">
-                      <CalendarCheck className="mr-2 h-4 w-4" />
-                      Reservar uma Vaga
-                    </Button>
-                  </Link>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <main className="flex-1">
+          <div className="w-full max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <Card className="shadow-md">
+              <CardHeader>
+                <CardTitle className="text-2xl flex items-center">
+                  <Bookmark className="mr-3 h-7 w-7 text-primary" />
+                  Histórico de Reservas
+                </CardTitle>
+                <CardDescription>
+                  Veja todas as suas reservas de vagas de estacionamento.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoadingReservations ? (
+                  <div className="flex justify-center items-center py-10">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : userReservations.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {userReservations.map((res) => (
+                      <Card key={res.id} className="shadow-lg">
+                        <CardHeader>
+                          <CardTitle>
+                            Vaga: {res.spotDetails?.number || "N/A"}
+                          </CardTitle>
+                          <CardDescription>
+                            Local: {res.spotDetails?.location || "Não informado"}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-1 text-sm">
+                          <p><strong>Período:</strong></p>
+                          <p>
+                            De: {format(new Date(res.startTime), "dd/MM/yyyy", { locale: ptBR })}
+                          </p>
+                          <p>
+                            Até: {format(new Date(res.endTime), "dd/MM/yyyy", { locale: ptBR })}
+                          </p>
+                          {res.spotDetails?.ownerName && (
+                              <p className="text-xs text-muted-foreground pt-2">
+                                  Vaga de: {res.spotDetails.ownerName}
+                              </p>
+                          )}
+                        </CardContent>
+                        {/* <CardFooter>
+                          <Button variant="outline" size="sm" disabled>Cancelar Reserva (Em breve)</Button>
+                        </CardFooter> */}
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-10">
+                    <AlertTriangle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-lg font-medium text-muted-foreground">Você ainda não fez nenhuma reserva.</p>
+                    <Link href="/reservations" passHref legacyBehavior>
+                      <Button className="mt-4">
+                        <CalendarCheck className="mr-2 h-4 w-4" />
+                        Reservar uma Vaga
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </main>
         <footer className="border-t p-4 text-center text-sm text-muted-foreground">
           © {new Date().getFullYear()} Vaga Livre. Todos os direitos reservados.

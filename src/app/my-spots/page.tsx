@@ -149,56 +149,58 @@ export default function MySpotsPage() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="text-2xl">
-                {user.role === 'manager' ? "Gerenciar Vagas do Condomínio" : "Gerencie Suas Vagas"}
-              </CardTitle>
-              <CardDescription>
-                {user.role === 'manager'
-                  ? "Visualize e gerencie todas as vagas de estacionamento cadastradas no sistema."
-                  : "Visualize, edite a disponibilidade e gerencie suas vagas de estacionamento cadastradas."
-                }
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoadingData ? (
-                <div className="flex justify-center items-center py-10">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : spotsToDisplay.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {spotsToDisplay.map((spot) => {
-                    const reservationsForThisSpot = allReservations.filter(res => res.spotId === spot.id);
-                    return (
-                      <ParkingSpotCard 
-                        key={spot.id} 
-                        spot={spot} 
-                        reservationsForSpot={reservationsForThisSpot}
-                        showActions // Actions are relevant for owner/manager view
-                      />
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-10">
-                   <ParkingSquare className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-lg font-medium text-muted-foreground">
-                    {user.role === 'manager'
-                      ? "Nenhuma vaga cadastrada no sistema ainda."
-                      : "Você ainda não cadastrou nenhuma vaga."}
-                  </p>
-                  <Link href="/my-spots/register" passHref legacyBehavior>
-                    <Button className="mt-4">
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      {user.role === 'manager' ? "Cadastrar Primeira Vaga" : "Cadastrar Sua Primeira Vaga"}
-                    </Button>
-                  </Link>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <main className="flex-1">
+          <div className="w-full max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6">
+            <Card className="shadow-md">
+              <CardHeader>
+                <CardTitle className="text-2xl">
+                  {user.role === 'manager' ? "Gerenciar Vagas do Condomínio" : "Gerencie Suas Vagas"}
+                </CardTitle>
+                <CardDescription>
+                  {user.role === 'manager'
+                    ? "Visualize e gerencie todas as vagas de estacionamento cadastradas no sistema."
+                    : "Visualize, edite a disponibilidade e gerencie suas vagas de estacionamento cadastradas."
+                  }
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoadingData ? (
+                  <div className="flex justify-center items-center py-10">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : spotsToDisplay.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {spotsToDisplay.map((spot) => {
+                      const reservationsForThisSpot = allReservations.filter(res => res.spotId === spot.id);
+                      return (
+                        <ParkingSpotCard 
+                          key={spot.id} 
+                          spot={spot} 
+                          reservationsForSpot={reservationsForThisSpot}
+                          showActions // Actions are relevant for owner/manager view
+                        />
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-10">
+                    <ParkingSquare className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-lg font-medium text-muted-foreground">
+                      {user.role === 'manager'
+                        ? "Nenhuma vaga cadastrada no sistema ainda."
+                        : "Você ainda não cadastrou nenhuma vaga."}
+                    </p>
+                    <Link href="/my-spots/register" passHref legacyBehavior>
+                      <Button className="mt-4">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        {user.role === 'manager' ? "Cadastrar Primeira Vaga" : "Cadastrar Sua Primeira Vaga"}
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </main>
         <footer className="border-t p-4 text-center text-sm text-muted-foreground">
           © {new Date().getFullYear()} Vaga Livre. Todos os direitos reservados.

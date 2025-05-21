@@ -283,71 +283,73 @@ export default function ManageUsersPage() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 lg:p-8">
-          <Card className="w-full shadow-xl">
-            <CardHeader>
-              <CardTitle className="text-2xl flex items-center">
-                <UsersIcon className="mr-3 h-7 w-7 text-primary" />
-                Lista de Usuários Cadastrados
-              </CardTitle>
-              <CardDescription>
-                Visualize e gerencie os usuários do sistema.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoadingUsers ? (
-                <div className="flex justify-center items-center py-10">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : allUsers.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Nome</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Apartamento</TableHead>
-                        <TableHead>Condomínio</TableHead>
-                        <TableHead>Papel</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {allUsers.map((user) => {
-                        const condominium = user.condominiumId ? getCondominiumById(user.condominiumId) : null;
-                        return (
-                          <TableRow key={user.id}>
-                            <TableCell className="font-medium">{user.name}</TableCell>
-                            <TableCell>{user.email}</TableCell>
-                            <TableCell>{user.apartment || "N/A"}</TableCell>
-                            <TableCell>{condominium ? condominium.name : "N/A"}</TableCell>
-                            <TableCell>
-                              <Badge variant={user.role === 'manager' ? "default" : "secondary"}>
-                                {user.role === 'manager' ? 'Síndico' : 'Morador'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right space-x-2">
-                              <Button variant="outline" size="sm" onClick={() => handleOpenViewDialog(user)}>
-                                <Eye className="mr-1 h-3 w-3" /> Ver
-                              </Button>
-                              <Button variant="outline" size="sm" onClick={() => handleOpenEditDialog(user)}>
-                                <Edit2 className="mr-1 h-3 w-3" /> Editar
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className="text-center py-10">
-                  <UsersIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-lg font-medium text-muted-foreground">Nenhum usuário cadastrado no sistema ainda (além de você, se for síndico).</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <main className="flex-1">
+          <div className="w-full max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <Card className="w-full shadow-xl">
+              <CardHeader>
+                <CardTitle className="text-2xl flex items-center">
+                  <UsersIcon className="mr-3 h-7 w-7 text-primary" />
+                  Lista de Usuários Cadastrados
+                </CardTitle>
+                <CardDescription>
+                  Visualize e gerencie os usuários do sistema.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoadingUsers ? (
+                  <div className="flex justify-center items-center py-10">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : allUsers.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Nome</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Apartamento</TableHead>
+                          <TableHead>Condomínio</TableHead>
+                          <TableHead>Papel</TableHead>
+                          <TableHead className="text-right">Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {allUsers.map((user) => {
+                          const condominium = user.condominiumId ? getCondominiumById(user.condominiumId) : null;
+                          return (
+                            <TableRow key={user.id}>
+                              <TableCell className="font-medium">{user.name}</TableCell>
+                              <TableCell>{user.email}</TableCell>
+                              <TableCell>{user.apartment || "N/A"}</TableCell>
+                              <TableCell>{condominium ? condominium.name : "N/A"}</TableCell>
+                              <TableCell>
+                                <Badge variant={user.role === 'manager' ? "default" : "secondary"}>
+                                  {user.role === 'manager' ? 'Síndico' : 'Morador'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right space-x-2">
+                                <Button variant="outline" size="sm" onClick={() => handleOpenViewDialog(user)}>
+                                  <Eye className="mr-1 h-3 w-3" /> Ver
+                                </Button>
+                                <Button variant="outline" size="sm" onClick={() => handleOpenEditDialog(user)}>
+                                  <Edit2 className="mr-1 h-3 w-3" /> Editar
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <div className="text-center py-10">
+                    <UsersIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-lg font-medium text-muted-foreground">Nenhum usuário cadastrado no sistema ainda (além de você, se for síndico).</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </main>
         <footer className="border-t p-4 text-center text-sm text-muted-foreground">
           © {new Date().getFullYear()} Vaga Livre. Todos os direitos reservados.

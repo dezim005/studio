@@ -249,160 +249,162 @@ export default function ProfilePage() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 lg:p-8">
-          <Card className="w-full max-w-2xl mx-auto shadow-xl">
-            <CardHeader>
-              <CardTitle className="text-2xl flex items-center">
-                <UserIcon className="mr-3 h-7 w-7 text-primary" />
-                Informações Pessoais
-              </CardTitle>
-              <CardDescription>
-                Visualize e atualize seus dados cadastrais. Mantenha suas informações sempre corretas.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nome Completo</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Seu nome completo" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input type="email" {...field} readOnly disabled className="cursor-not-allowed bg-muted/50"/>
-                        </FormControl>
-                        <FormDescription>
-                          Seu email de login. Não pode ser alterado.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  {user.role === 'resident' && user.condominiumId && (
+        <main className="flex-1">
+          <div className="w-full max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <Card className="w-full max-w-2xl mx-auto shadow-xl">
+              <CardHeader>
+                <CardTitle className="text-2xl flex items-center">
+                  <UserIcon className="mr-3 h-7 w-7 text-primary" />
+                  Informações Pessoais
+                </CardTitle>
+                <CardDescription>
+                  Visualize e atualize seus dados cadastrais. Mantenha suas informações sempre corretas.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                     <FormField
                       control={form.control}
-                      name="condominiumName"
+                      name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Condomínio</FormLabel>
+                          <FormLabel>Nome Completo</FormLabel>
                           <FormControl>
-                            <Input {...field} readOnly disabled className="cursor-not-allowed bg-muted/50"/>
+                            <Input placeholder="Seu nome completo" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" {...field} readOnly disabled className="cursor-not-allowed bg-muted/50"/>
                           </FormControl>
                           <FormDescription>
-                            Seu condomínio. Não pode ser alterado aqui.
+                            Seu email de login. Não pode ser alterado.
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  )}
-                  <FormField
-                    control={form.control}
-                    name="apartment"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Apartamento</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Ex: Bloco A, Apto 101" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Número do seu apartamento e bloco, se aplicável.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
+                    {user.role === 'resident' && user.condominiumId && (
+                      <FormField
+                        control={form.control}
+                        name="condominiumName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Condomínio</FormLabel>
+                            <FormControl>
+                              <Input {...field} readOnly disabled className="cursor-not-allowed bg-muted/50"/>
+                            </FormControl>
+                            <FormDescription>
+                              Seu condomínio. Não pode ser alterado aqui.
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="dateOfBirth"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Data de Nascimento (Opcional)</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="cpf"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>CPF (Opcional)</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="XXX.XXX.XXX-XX"
-                            {...field}
-                            onChange={(e) => field.onChange(formatCPF(e.target.value))}
-                            maxLength={14}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Telefone (Opcional)</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="(XX) XXXXX-XXXX"
-                            {...field}
-                            onChange={(e) => field.onChange(formatPhone(e.target.value))}
-                            maxLength={15}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Breve Descrição (Opcional)</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Conte um pouco sobre você..."
-                            className="resize-none"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Máximo de 200 caracteres.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting || !form.formState.isDirty}>
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {isSubmitting ? "Salvando..." : "Salvar Alterações"}
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
+                    <FormField
+                      control={form.control}
+                      name="apartment"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Apartamento</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ex: Bloco A, Apto 101" {...field} />
+                          </FormControl>
+                          <FormDescription>
+                            Número do seu apartamento e bloco, se aplicável.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="dateOfBirth"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Data de Nascimento (Opcional)</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="cpf"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>CPF (Opcional)</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="XXX.XXX.XXX-XX"
+                              {...field}
+                              onChange={(e) => field.onChange(formatCPF(e.target.value))}
+                              maxLength={14}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Telefone (Opcional)</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="(XX) XXXXX-XXXX"
+                              {...field}
+                              onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                              maxLength={15}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Breve Descrição (Opcional)</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Conte um pouco sobre você..."
+                              className="resize-none"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Máximo de 200 caracteres.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting || !form.formState.isDirty}>
+                      {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {isSubmitting ? "Salvando..." : "Salvar Alterações"}
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </div>
         </main>
         <footer className="border-t p-4 text-center text-sm text-muted-foreground">
           © {new Date().getFullYear()} Vaga Livre. Todos os direitos reservados.

@@ -23,7 +23,7 @@ import { Logo } from "@/components/logo";
 import { UserNav } from "@/components/layout/user-nav";
 import type { ParkingSpot, Reservation } from "@/types"; 
 import { getParkingSpots } from "@/lib/parking-spot-service"; 
-import { getAllReservations } from "@/lib/reservation-service"; 
+import { getAllReservations, isSpotFullyBooked } from "@/lib/reservation-service"; 
 import { LayoutDashboard, ParkingSquare, CalendarCheck, Search, List, Map, Loader2, Building, Users, Bookmark } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -77,26 +77,26 @@ export default function DashboardPage() {
     );
   }
 
-  const isSpotOccupiedNow = (spot: ParkingSpot): boolean => {
+  const isSpotOccupiedNow = (spot: ParkingSpot, spotSpecificReservations: Reservation[]): boolean => {
     const now = new Date();
-    const todayStart = startOfDay(now);
-    const todayEnd = endOfDay(now);
-
+    
+    // Check if owner marked it as generally unavailable for now based on defined slots
     const hasAvailabilityToday = spot.availability?.some(slot => {
         const slotStart = startOfDay(new Date(slot.startTime));
         const slotEnd = endOfDay(new Date(slot.endTime));
-        return todayStart <= slotEnd && todayEnd >= slotStart;
+        return now >= slotStart && now <= slotEnd;
     }) || false;
 
-    if (!hasAvailabilityToday && spot.availability && spot.availability.length > 0) {
+    // If there are availability slots, but none for today, consider it "occupied" by owner's definition
+    if (spot.availability && spot.availability.length > 0 && !hasAvailabilityToday) {
         return true; 
     }
-    if ((!spot.availability || spot.availability.length === 0) && spot.isAvailable) {
-      return true; 
-    }
+    // If NO availability slots are defined AT ALL, but spot.isAvailable is true, it means owner wants it generally available
+    // but current booking status depends on reservations.
+    // If spot.isAvailable is false, it's occupied by owner.
 
-    const spotReservations = allReservations.filter(r => r.spotId === spot.id);
-    return spotReservations.some(res => {
+    // Check active reservations
+    return spotSpecificReservations.some(res => {
       const resStart = new Date(res.startTime);
       const resEnd = new Date(res.endTime);
       return resStart <= now && resEnd >= now;
@@ -108,13 +108,19 @@ export default function DashboardPage() {
                           spot.location.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = filterType === 'all' || spot.type === filterType;
     
+    const spotSpecificReservations = allReservations.filter(r => r.spotId === spot.id);
+
     let matchesAvailabilityFilter = true;
     if (filterAvailability !== 'all') {
-        const isOccupied = isSpotOccupiedNow(spot);
+        const isOccupied = isSpotOccupiedNow(spot, spotSpecificReservations);
+        const isConfigured = spot.availability && spot.availability.length > 0;
+
         if (filterAvailability === 'available') {
-            matchesAvailabilityFilter = spot.isAvailable && !isOccupied && (spot.availability && spot.availability.length > 0);
+            // Available if owner marked as available, it's configured, AND not occupied by a reservation now
+            matchesAvailabilityFilter = spot.isAvailable && isConfigured && !isOccupied;
         } else if (filterAvailability === 'occupied') {
-            matchesAvailabilityFilter = !spot.isAvailable || isOccupied || (!spot.availability || spot.availability.length === 0) ;
+            // Occupied if owner marked as unavailable OR it's not configured OR it is occupied by a reservation now
+            matchesAvailabilityFilter = !spot.isAvailable || !isConfigured || isOccupied;
         }
     }
     // Only show spots marked as available by owner for the main dashboard, detailed status inside card
@@ -199,93 +205,95 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="text-2xl">Disponibilidade de Vagas</CardTitle>
-              <CardDescription>Veja as vagas de estacionamento e seu status atual. Para reservar, vá para "Reservar Vaga".</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Buscar por número da vaga ou localização..."
-                    className="pl-8 w-full"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <Select value={filterType} onValueChange={setFilterType}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Filtrar por tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os Tipos</SelectItem>
-                    <SelectItem value="compact">Compacto</SelectItem>
-                    <SelectItem value="standard">Padrão</SelectItem>
-                    <SelectItem value="suv">SUV</SelectItem>
-                    <SelectItem value="motorcycle">Moto</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={filterAvailability} onValueChange={setFilterAvailability}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Filtrar por disponibilidade" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os Status (Agora)</SelectItem>
-                    <SelectItem value="available">Disponível (Agora)</SelectItem>
-                    <SelectItem value="occupied">Ocupada (Agora)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex justify-end items-center mb-4 gap-2">
-                <span className="text-sm text-muted-foreground">Visualizar:</span>
-                <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="sm" onClick={() => setViewMode('list')}>
-                  <List className="mr-2 h-4 w-4"/> Lista
-                </Button>
-                <Button variant={viewMode === 'map' ? 'secondary' : 'ghost'} size="sm" onClick={() => setViewMode('map')} disabled>
-                  <Map className="mr-2 h-4 w-4"/> Mapa (Em breve)
-                </Button>
-              </div>
-
-              <Separator className="my-4"/>
-
-              {isLoadingData ? (
-                <div className="flex justify-center items-center py-10">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : filteredSpots.length > 0 ? (
-                 viewMode === 'list' ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredSpots.map((spot) => {
-                      const reservationsForThisSpot = allReservations.filter(res => res.spotId === spot.id);
-                      return (
-                        <ParkingSpotCard 
-                          key={spot.id} 
-                          spot={spot} 
-                          reservationsForSpot={reservationsForThisSpot}
-                          showActions={false} // No direct booking from dashboard
-                        />
-                      );
-                    })}
+        <main className="flex-1">
+          <div className="w-full max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6">
+            <Card className="shadow-md">
+              <CardHeader>
+                <CardTitle className="text-2xl">Disponibilidade de Vagas</CardTitle>
+                <CardDescription>Veja as vagas de estacionamento e seu status atual. Para reservar, vá para "Reservar Vaga".</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="search"
+                      placeholder="Buscar por número da vaga ou localização..."
+                      className="pl-8 w-full"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                   </div>
+                  <Select value={filterType} onValueChange={setFilterType}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Filtrar por tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os Tipos</SelectItem>
+                      <SelectItem value="compact">Compacto</SelectItem>
+                      <SelectItem value="standard">Padrão</SelectItem>
+                      <SelectItem value="suv">SUV</SelectItem>
+                      <SelectItem value="motorcycle">Moto</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={filterAvailability} onValueChange={setFilterAvailability}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Filtrar por disponibilidade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os Status (Agora)</SelectItem>
+                      <SelectItem value="available">Disponível (Agora)</SelectItem>
+                      <SelectItem value="occupied">Ocupada (Agora)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex justify-end items-center mb-4 gap-2">
+                  <span className="text-sm text-muted-foreground">Visualizar:</span>
+                  <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="sm" onClick={() => setViewMode('list')}>
+                    <List className="mr-2 h-4 w-4"/> Lista
+                  </Button>
+                  <Button variant={viewMode === 'map' ? 'secondary' : 'ghost'} size="sm" onClick={() => setViewMode('map')} disabled>
+                    <Map className="mr-2 h-4 w-4"/> Mapa (Em breve)
+                  </Button>
+                </div>
+
+                <Separator className="my-4"/>
+
+                {isLoadingData ? (
+                  <div className="flex justify-center items-center py-10">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : filteredSpots.length > 0 ? (
+                  viewMode === 'list' ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filteredSpots.map((spot) => {
+                        const reservationsForThisSpot = allReservations.filter(res => res.spotId === spot.id);
+                        return (
+                          <ParkingSpotCard 
+                            key={spot.id} 
+                            spot={spot} 
+                            reservationsForSpot={reservationsForThisSpot}
+                            showActions={false} // No direct booking from dashboard
+                          />
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-64 border rounded-md bg-muted/50">
+                      <p className="text-muted-foreground">Visualização de mapa em breve!</p>
+                    </div>
+                  )
                 ) : (
-                  <div className="flex items-center justify-center h-64 border rounded-md bg-muted/50">
-                    <p className="text-muted-foreground">Visualização de mapa em breve!</p>
+                  <div className="text-center py-10">
+                    <ParkingSquare className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-lg font-medium text-muted-foreground">Nenhuma vaga de estacionamento corresponde aos seus critérios.</p>
+                    <p className="text-sm text-muted-foreground">Tente ajustar sua busca ou filtros.</p>
                   </div>
-                )
-              ) : (
-                <div className="text-center py-10">
-                  <ParkingSquare className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-lg font-medium text-muted-foreground">Nenhuma vaga de estacionamento corresponde aos seus critérios.</p>
-                  <p className="text-sm text-muted-foreground">Tente ajustar sua busca ou filtros.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </main>
         <footer className="border-t p-4 text-center text-sm text-muted-foreground">
           © {new Date().getFullYear()} Vaga Livre. Todos os direitos reservados.

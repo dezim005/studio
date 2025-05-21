@@ -184,65 +184,67 @@ export default function RegisterCondominiumPage() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 lg:p-8">
-          <Card className="w-full max-w-2xl mx-auto shadow-xl">
-            <CardHeader>
-              <CardTitle className="text-2xl flex items-center">
-                <Building className="mr-3 h-7 w-7 text-primary" />
-                Dados do Condomínio
-              </CardTitle>
-              <CardDescription>
-                Preencha as informações abaixo para adicionar um novo condomínio ao sistema.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nome do Condomínio</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Ex: Residencial Flores" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          O nome oficial do condomínio.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Endereço Completo</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Ex: Rua das Palmeiras, 123, Bairro Sol, Cidade Alegre - UF, CEP 12345-678"
-                            className="resize-none"
-                            rows={3}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          O endereço completo do condomínio.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting}>
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {isSubmitting ? "Cadastrando..." : "Cadastrar Condomínio"}
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
+        <main className="flex-1">
+          <div className="w-full max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <Card className="w-full max-w-2xl mx-auto shadow-xl">
+              <CardHeader>
+                <CardTitle className="text-2xl flex items-center">
+                  <Building className="mr-3 h-7 w-7 text-primary" />
+                  Dados do Condomínio
+                </CardTitle>
+                <CardDescription>
+                  Preencha as informações abaixo para adicionar um novo condomínio ao sistema.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nome do Condomínio</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ex: Residencial Flores" {...field} />
+                          </FormControl>
+                          <FormDescription>
+                            O nome oficial do condomínio.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Endereço Completo</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Ex: Rua das Palmeiras, 123, Bairro Sol, Cidade Alegre - UF, CEP 12345-678"
+                              className="resize-none"
+                              rows={3}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            O endereço completo do condomínio.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting}>
+                      {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {isSubmitting ? "Cadastrando..." : "Cadastrar Condomínio"}
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </div>
         </main>
         <footer className="border-t p-4 text-center text-sm text-muted-foreground">
           © {new Date().getFullYear()} Vaga Livre. Todos os direitos reservados.

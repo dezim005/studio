@@ -97,8 +97,10 @@ export default function ManageSpotAvailabilityPage() {
              <Skeleton className="h-6 w-48 rounded-md" />
              <div className="ml-auto"> <UserNav /></div>
           </header>
-          <main className="flex-1 p-4 md:p-6 lg:p-8">
-            <Skeleton className="h-96 w-full max-w-4xl mx-auto rounded-xl" />
+          <main className="flex-1">
+            <div className="w-full max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+             <Skeleton className="h-96 w-full max-w-4xl mx-auto rounded-xl" />
+            </div>
           </main>
         </SidebarInset>
       </div>
@@ -203,8 +205,10 @@ export default function ManageSpotAvailabilityPage() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 lg:p-8">
-          <SpotAvailabilityCalendar spot={spot} onSave={handleSaveAvailability} />
+        <main className="flex-1">
+          <div className="w-full max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <SpotAvailabilityCalendar spot={spot} onSave={handleSaveAvailability} />
+          </div>
         </main>
         <footer className="border-t p-4 text-center text-sm text-muted-foreground">
           © {new Date().getFullYear()} Vaga Livre. Todos os direitos reservados.

@@ -66,10 +66,8 @@ export default function LoginPage() {
   }
 
   return (
-    // Contêiner externo: centraliza verticalmente com items-center
-    <div className="flex min-h-screen items-center bg-background p-4 sm:p-6 md:p-8">
-      {/* Contêiner interno: max-w-md e mx-auto para centralização horizontal */}
-      <div className="max-w-md mx-auto space-y-8 flex flex-col items-center">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 sm:p-6 md:p-8">
+      <div className="max-w-md w-full space-y-8 flex flex-col items-center">
         <div className="flex justify-center">
           <Logo />
         </div>

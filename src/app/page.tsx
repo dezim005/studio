@@ -23,7 +23,7 @@ import { Logo } from "@/components/logo";
 import { UserNav } from "@/components/layout/user-nav";
 import type { ParkingSpot, Reservation } from "@/types"; 
 import { getParkingSpots } from "@/lib/parking-spot-service"; 
-import { getAllReservations, isSpotFullyBooked } from "@/lib/reservation-service"; 
+import { getAllReservations, addReservation } from "@/lib/reservation-service"; 
 import { LayoutDashboard, ParkingSquare, CalendarCheck, Search, List, Map, Loader2, Building, Users, Bookmark, History } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -38,10 +38,14 @@ import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { startOfDay, endOfDay } from "date-fns"; 
 import { cn } from "@/lib/utils";
+import { SpotReservationDialog } from "@/components/parking/spot-reservation-dialog";
+import type { DateRange } from "react-day-picker";
+import { useToast } from "@/hooks/use-toast";
 
 export default function DashboardPage() {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
 
   const [spots, setSpots] = React.useState<ParkingSpot[]>([]);
   const [allReservations, setAllReservations] = React.useState<Reservation[]>([]); 
@@ -52,6 +56,10 @@ export default function DashboardPage() {
   const [viewMode, setViewMode] = React.useState<"list" | "map">("list");
 
   const { isMobile, state: sidebarState } = useSidebar();
+
+  const [selectedSpotForDialog, setSelectedSpotForDialog] = React.useState<ParkingSpot | null>(null);
+  const [isReservationDialogOpen, setIsReservationDialogOpen] = React.useState(false);
+  const [isSubmittingReservation, setIsSubmittingReservation] = React.useState(false);
 
   React.useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
@@ -108,24 +116,68 @@ export default function DashboardPage() {
     let matchesAvailabilityFilter = true;
     if (filterAvailability !== 'all') {
         const isOccupied = isSpotOccupiedNow(spot, spotSpecificReservations);
-        // For the dashboard filter, "available" means the owner set it as generally available,
-        // it has some configuration, and it's not currently booked by a reservation.
         if (filterAvailability === 'available') {
             matchesAvailabilityFilter = spot.isAvailable && 
                                         (spot.availability && spot.availability.length > 0) && 
                                         !isOccupied;
         } else if (filterAvailability === 'occupied') {
-            // Occupied if owner marked as unavailable OR it's not configured for availability
-            // OR it is currently occupied by a reservation.
             matchesAvailabilityFilter = !spot.isAvailable || 
                                         !(spot.availability && spot.availability.length > 0) || 
                                         isOccupied;
         }
     }
-    // Dashboard still shows spots that are generally available by owner.
+    // Dashboard still shows spots that are generally available by owner
+    // and have some availability configuration.
     // The card itself will show more detailed status like "fully_booked".
-    return spot.isAvailable && matchesSearch && matchesType && matchesAvailabilityFilter;
+    return spot.isAvailable && (spot.availability && spot.availability.length > 0) && matchesSearch && matchesType && matchesAvailabilityFilter;
   });
+
+  const handleOpenReservationDialog = (spot: ParkingSpot) => {
+    setSelectedSpotForDialog(spot);
+    setIsReservationDialogOpen(true);
+  };
+
+  const handleConfirmReservation = async (spotId: string, dateRange: DateRange) => {
+    if (!user) {
+      toast({ title: "Erro", description: "Você precisa estar logado para reservar.", variant: "destructive" });
+      return;
+    }
+    if (!dateRange.from) {
+      toast({ title: "Selecione o Período", description: "Por favor, selecione um período para sua reserva.", variant: "destructive" });
+      return;
+    }
+    
+    setIsSubmittingReservation(true);
+
+    const reservationData = {
+      spotId,
+      userId: user.id,
+      startTime: startOfDay(dateRange.from),
+      endTime: dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from),
+    };
+
+    const result = await addReservation(reservationData);
+
+    if (result.success) {
+      toast({
+        title: "Reserva Confirmada!",
+        description: result.message,
+      });
+      // Re-fetch data to update UI
+      const updatedSpots = getParkingSpots(); 
+      setSpots(updatedSpots);
+      const updatedReservations = getAllReservations(); 
+      setAllReservations(updatedReservations);
+      setIsReservationDialogOpen(false); 
+    } else {
+      toast({
+        title: "Falha na Reserva",
+        description: result.message || "Não foi possível reservar a vaga para este período.",
+        variant: "destructive",
+      });
+    }
+    setIsSubmittingReservation(false);
+  };
 
 
   return (
@@ -226,7 +278,7 @@ export default function DashboardPage() {
             <Card className="shadow-md">
               <CardHeader>
                 <CardTitle className="text-2xl">Disponibilidade de Vagas</CardTitle>
-                <CardDescription>Veja as vagas de estacionamento e seu status atual. Para reservar, vá para "Reservar Vaga".</CardDescription>
+                <CardDescription>Veja as vagas de estacionamento e seu status atual. Clique em uma vaga para ver a disponibilidade e reservar.</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
@@ -290,7 +342,8 @@ export default function DashboardPage() {
                             key={spot.id} 
                             spot={spot} 
                             reservationsForSpot={reservationsForThisSpot}
-                            showActions={false} 
+                            showActions={true} // Habilitar ações no dashboard
+                            onBookSpotClick={() => handleOpenReservationDialog(spot)}
                           />
                         );
                       })}
@@ -304,7 +357,7 @@ export default function DashboardPage() {
                   <div className="text-center py-10">
                     <ParkingSquare className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                     <p className="text-lg font-medium text-muted-foreground">Nenhuma vaga de estacionamento corresponde aos seus critérios.</p>
-                    <p className="text-sm text-muted-foreground">Tente ajustar sua busca ou filtros.</p>
+                    <p className="text-sm text-muted-foreground">Tente ajustar sua busca ou filtros, ou verifique se há vagas com disponibilidade definida.</p>
                   </div>
                 )}
               </CardContent>
@@ -315,6 +368,17 @@ export default function DashboardPage() {
           © {new Date().getFullYear()} Vaga Livre. Todos os direitos reservados.
         </footer>
       </SidebarInset>
+
+      {selectedSpotForDialog && (
+        <SpotReservationDialog
+          spot={selectedSpotForDialog}
+          allReservations={allReservations.filter(res => res.spotId === selectedSpotForDialog.id)}
+          isOpen={isReservationDialogOpen}
+          onOpenChange={setIsReservationDialogOpen}
+          onConfirmReservation={handleConfirmReservation}
+          isSubmitting={isSubmittingReservation}
+        />
+      )}
     </div>
   );
 }

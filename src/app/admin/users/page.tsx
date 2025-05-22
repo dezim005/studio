@@ -25,15 +25,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Logo } from "@/components/logo";
 import { UserNav } from "@/components/layout/user-nav";
 import type { User, Condominium } from "@/types";
-import { getUsers, updateUser } from "@/lib/user-service";
+import { getUsers, updateUser, deleteUser } from "@/lib/user-service";
 import { getCondominiumById, getCondominiums } from "@/lib/condominium-service";
-import { LayoutDashboard, ParkingSquare, CalendarCheck, Building, Users as UsersIcon, ArrowLeft, Loader2, Eye, Edit2, User as UserIconLucide, Mail, Building2, Calendar as CalendarIconLucide, Hash, PhoneIcon, Bookmark, History } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, Building, Users as UsersIcon, ArrowLeft, Loader2, Eye, Edit2, Trash2, User as UserIconLucide, Mail, Building2, Calendar as CalendarIconLucide, Hash, PhoneIcon, Bookmark, History } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
+  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -78,7 +79,7 @@ const editUserSchema = z.object({
 type EditUserFormValues = z.infer<typeof editUserSchema>;
 
 export default function ManageUsersPage() {
-  const { user: currentUser, isAuthenticated, isLoading: isAuthLoading, setUser: setAuthUser } = useAuth();
+  const { user: currentUser, isAuthenticated, isLoading: isAuthLoading, setUser: setAuthUser, logout } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const { isMobile, state: sidebarState } = useSidebar();
@@ -91,6 +92,9 @@ export default function ManageUsersPage() {
   const [selectedUserForEdit, setSelectedUserForEdit] = React.useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
   const [isSubmittingEdit, setIsSubmittingEdit] = React.useState(false);
+
+  const [userToDelete, setUserToDelete] = React.useState<User | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
 
   const form = useForm<EditUserFormValues>({
     resolver: zodResolver(editUserSchema),
@@ -143,6 +147,31 @@ export default function ManageUsersPage() {
     setSelectedUserForEdit(user);
     setIsEditDialogOpen(true);
   };
+
+  const handleOpenDeleteDialog = (user: User) => {
+    setUserToDelete(user);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return;
+
+    const wasDeleted = deleteUser(userToDelete.id);
+    if (wasDeleted) {
+      setAllUsers(prevUsers => prevUsers.filter(u => u.id !== userToDelete.id));
+      toast({ title: "Usuário Excluído", description: `O usuário ${userToDelete.name} foi excluído com sucesso.` });
+      
+      if (currentUser?.id === userToDelete.id) {
+        toast({ title: "Auto-Exclusão", description: "Você excluiu sua própria conta e será deslogado."});
+        await logout(); // logout já redireciona para /login
+      }
+    } else {
+      toast({ title: "Falha na Exclusão", description: "Não foi possível excluir o usuário.", variant: "destructive" });
+    }
+    setIsDeleteDialogOpen(false);
+    setUserToDelete(null);
+  };
+
 
   const formatCPF = (value: string) => {
     const cpf = value.replace(/\D/g, '');
@@ -351,6 +380,9 @@ export default function ManageUsersPage() {
                                 <Button variant="outline" size="sm" onClick={() => handleOpenEditDialog(user)}>
                                   <Edit2 className="mr-1 h-3 w-3" /> Editar
                                 </Button>
+                                <Button variant="destructive" size="sm" onClick={() => handleOpenDeleteDialog(user)}>
+                                  <Trash2 className="mr-1 h-3 w-3" /> Excluir
+                                </Button>
                               </TableCell>
                             </TableRow>
                           );
@@ -361,7 +393,7 @@ export default function ManageUsersPage() {
                 ) : (
                   <div className="text-center py-10">
                     <UsersIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-lg font-medium text-muted-foreground">Nenhum usuário cadastrado no sistema ainda (além de você, se for síndico).</p>
+                    <p className="text-lg font-medium text-muted-foreground">Nenhum usuário cadastrado no sistema ainda.</p>
                   </div>
                 )}
               </CardContent>
@@ -557,8 +589,25 @@ export default function ManageUsersPage() {
           </DialogContent>
         </Dialog>
       )}
+
+      {userToDelete && (
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir o usuário <span className="font-semibold">{userToDelete.name}</span>? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleConfirmDelete} className={buttonVariants({ variant: "destructive" })}>
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }
-
-    

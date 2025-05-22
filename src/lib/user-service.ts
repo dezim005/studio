@@ -32,7 +32,6 @@ export function updateUser(userId: string, data: Partial<User>): User | undefine
     try {
       localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(users));
       
-      // Também precisamos atualizar o usuário logado na sessão se for ele mesmo
       const authState = localStorage.getItem("vagaLivreAuth");
       if (authState) {
         const authData = JSON.parse(authState);
@@ -48,4 +47,29 @@ export function updateUser(userId: string, data: Partial<User>): User | undefine
     }
   }
   return undefined;
+}
+
+export function deleteUser(userId: string): boolean {
+  let users = getUsers();
+  const initialLength = users.length;
+  users = users.filter(user => user.id !== userId);
+
+  if (users.length < initialLength) {
+    try {
+      localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(users));
+      // Se o usuário excluído for o logado, limpar também o estado de autenticação
+      const authState = localStorage.getItem("vagaLivreAuth");
+      if (authState) {
+        const authData = JSON.parse(authState);
+        if (authData.user && authData.user.id === userId) {
+          localStorage.removeItem("vagaLivreAuth");
+        }
+      }
+      return true;
+    } catch (error) {
+      console.error("Falha ao salvar usuários após exclusão no localStorage", error);
+      return false;
+    }
+  }
+  return false; // Usuário não encontrado
 }

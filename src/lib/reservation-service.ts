@@ -52,8 +52,8 @@ function isWithinAvailabilitySlot(
     return false;
   }
   return availabilitySlots.some(slot => {
-    const slotStart = startOfDay(new Date(slot.startTime)); // Slot startTime é startOfDay
-    const slotEnd = endOfDay(new Date(slot.endTime));     // Slot endTime é endOfDay
+    const slotStart = startOfDay(new Date(slot.startTime)); 
+    const slotEnd = endOfDay(new Date(slot.endTime));     
     
     return requestedReservationStart >= slotStart && requestedReservationEnd <= slotEnd;
   });
@@ -88,7 +88,8 @@ export async function addReservation(
   const hasConflict = existingReservationsForSpot.some(existingRes => {
     const existingStart = startOfDay(new Date(existingRes.startTime));
     const existingEnd = endOfDay(new Date(existingRes.endTime));
-    return requestedStart <= existingEnd && requestedEnd >= existingStart; // Corrected conflict logic
+    // Conflito se o novo período se sobrepõe a um existente
+    return requestedStart <= existingEnd && requestedEnd >= existingStart;
   });
 
   if (hasConflict) {
@@ -108,6 +109,36 @@ export async function addReservation(
   return { success: true, message: "Vaga reservada com sucesso!", reservation: newReservation };
 }
 
+export async function cancelReservation(reservationId: string, currentUserId: string): Promise<{ success: boolean; message: string }> {
+  await new Promise(resolve => setTimeout(resolve, 300)); // Simula chamada de API
+  
+  let allReservations = getAllReservations();
+  const reservationIndex = allReservations.findIndex(res => res.id === reservationId);
+
+  if (reservationIndex === -1) {
+    return { success: false, message: "Reserva não encontrada." };
+  }
+
+  const reservationToCancel = allReservations[reservationIndex];
+
+  if (reservationToCancel.userId !== currentUserId) {
+    return { success: false, message: "Você não tem permissão para cancelar esta reserva." };
+  }
+
+  // Opcional: Verificar se a reserva já passou
+  if (new Date() > new Date(reservationToCancel.endTime)) {
+    // return { success: false, message: "Não é possível cancelar uma reserva que já terminou." };
+    // Para este protótipo, vamos permitir o cancelamento mesmo que já tenha passado, para facilitar testes.
+    // Em um app real, essa regra seria importante.
+  }
+  
+  allReservations.splice(reservationIndex, 1);
+  saveReservations(allReservations);
+
+  return { success: true, message: "Reserva cancelada com sucesso." };
+}
+
+
 export function isSpotFullyBooked(spot: ParkingSpot, reservationsForSpot: Reservation[]): boolean {
   if (!spot.availability || spot.availability.length === 0) {
     return false; 
@@ -117,11 +148,12 @@ export function isSpotFullyBooked(spot: ParkingSpot, reservationsForSpot: Reserv
 
   spot.availability.forEach(slot => {
     const daysInSlot = eachDayOfInterval({
-      start: startOfDay(new Date(slot.startTime)), // startTime do slot é startOfDay
-      end: startOfDay(new Date(slot.endTime)),     // endTime do slot é endOfDay, então usamos startOfDay aqui para eachDayOfInterval
+      start: startOfDay(new Date(slot.startTime)), 
+      end: startOfDay(new Date(slot.endTime)),     
     });
     daysInSlot.forEach(day => {
-      availableDaysSet.add(format(day, 'yyyy-MM-dd'));
+      const [year, month, dayNum] = format(day, 'yyyy-MM-dd').split('-').map(Number);
+      availableDaysSet.add(format(new Date(year, month - 1, dayNum), 'yyyy-MM-dd'));
     });
   });
 
@@ -130,13 +162,12 @@ export function isSpotFullyBooked(spot: ParkingSpot, reservationsForSpot: Reserv
   }
 
   for (const dayStr of availableDaysSet) {
-    // Robust date reconstruction from yyyy-MM-dd string
     const [year, month, dayNum] = dayStr.split('-').map(Number);
     const dayToCover = startOfDay(new Date(year, month - 1, dayNum));
     
     const isDayCoveredByReservation = reservationsForSpot.some(res => {
-      const resStart = startOfDay(new Date(res.startTime)); // Reservation startTime é startOfDay
-      const resEnd = endOfDay(new Date(res.endTime));       // Reservation endTime é endOfDay
+      const resStart = startOfDay(new Date(res.startTime)); 
+      const resEnd = endOfDay(new Date(res.endTime));       
       return dayToCover >= resStart && dayToCover <= resEnd;
     });
 

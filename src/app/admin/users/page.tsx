@@ -27,7 +27,7 @@ import { UserNav } from "@/components/layout/user-nav";
 import type { User, Condominium } from "@/types";
 import { getUsers, updateUser, deleteUser } from "@/lib/user-service";
 import { getCondominiumById, getCondominiums } from "@/lib/condominium-service";
-import { LayoutDashboard, ParkingSquare, CalendarCheck, Building, Users as UsersIcon, ArrowLeft, Loader2, Eye, Edit2, Trash2, User as UserIconLucide, Mail, Building2, Calendar as CalendarIconLucide, Hash, PhoneIcon, Bookmark, History, UserCheck } from "lucide-react"; // Adicionado UserCheck
+import { LayoutDashboard, ParkingSquare, CalendarCheck, Building, Users as UsersIcon, ArrowLeft, Loader2, Eye, Edit2, Trash2, User as UserIconLucide, Mail, Building2, Calendar as CalendarIconLucide, Hash, PhoneIcon, Bookmark, History, UserCheck as UserCheckIcon } from "lucide-react"; // Renomeado UserCheck para UserCheckIcon
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -56,13 +56,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns"; // Importar format
+import { ptBR } from "date-fns/locale"; // Importar ptBR
 
 const editUserSchema = z.object({
   name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres."),
   email: z.string().email(), // Readonly
   apartment: z.string().min(1, "Número do apartamento é obrigatório."),
   role: z.enum(["resident", "manager"], { required_error: "O papel do usuário é obrigatório."}),
-  status: z.enum(["pending", "approved", "denied"], { required_error: "O status do usuário é obrigatório." }), // Adicionado status
+  status: z.enum(["pending", "approved", "denied"], { required_error: "O status do usuário é obrigatório." }), 
   condominiumId: z.string().optional(),
   dateOfBirth: z.string().optional(),
   cpf: z.string().optional().refine(val => !val || /^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(val), {
@@ -101,6 +103,16 @@ export default function ManageUsersPage() {
     resolver: zodResolver(editUserSchema),
   });
 
+  // Definição da função formatDate
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "N/A";
+    try {
+      return format(new Date(dateString), "dd/MM/yyyy HH:mm", { locale: ptBR });
+    } catch (e) {
+      return "Data Inválida";
+    }
+  };
+
   React.useEffect(() => {
     if (!isAuthLoading) {
       if (!isAuthenticated) {
@@ -130,7 +142,7 @@ export default function ManageUsersPage() {
         email: selectedUserForEdit.email || "",
         apartment: selectedUserForEdit.apartment || "",
         role: selectedUserForEdit.role,
-        status: selectedUserForEdit.status, // Adicionado status
+        status: selectedUserForEdit.status, 
         condominiumId: selectedUserForEdit.condominiumId || "",
         dateOfBirth: selectedUserForEdit.dateOfBirth ? selectedUserForEdit.dateOfBirth.split('T')[0] : "",
         cpf: selectedUserForEdit.cpf || "",
@@ -199,7 +211,7 @@ export default function ManageUsersPage() {
       name: data.name,
       apartment: data.apartment,
       role: data.role,
-      status: data.status, // Adicionado status
+      status: data.status, 
       condominiumId: data.role === 'resident' ? data.condominiumId : undefined, 
       dateOfBirth: data.dateOfBirth,
       cpf: data.cpf,
@@ -235,9 +247,9 @@ export default function ManageUsersPage() {
 
   const getStatusBadgeVariant = (status: User['status']) => {
     switch (status) {
-      case 'approved': return 'default'; // Primary color (usually green-ish or blue-ish by theme)
-      case 'pending': return 'secondary'; // Muted/gray color
-      case 'denied': return 'destructive'; // Red color
+      case 'approved': return 'default'; 
+      case 'pending': return 'secondary'; 
+      case 'denied': return 'destructive'; 
       default: return 'outline';
     }
   };
@@ -332,7 +344,7 @@ export default function ManageUsersPage() {
                 <SidebarMenuItem>
                   <Link href="/admin/approvals" legacyBehavior passHref>
                     <SidebarMenuButton tooltip="Aprovações de Cadastro">
-                      <UserCheck />
+                      <UserCheckIcon />
                       <span>Aprovações</span>
                     </SidebarMenuButton>
                   </Link>
@@ -389,7 +401,6 @@ export default function ManageUsersPage() {
                       </TableHeader>
                       <TableBody>
                         {allUsers.map((user) => {
-                          // const condominium = user.condominiumId ? getCondominiumById(user.condominiumId) : null; // Condominio não está na tabela principal aqui
                           return (
                             <TableRow key={user.id}>
                               <TableCell className="font-medium">{user.name}</TableCell>
@@ -450,7 +461,7 @@ export default function ManageUsersPage() {
             <div className="space-y-3 py-4 text-sm max-h-[60vh] overflow-y-auto pr-2">
               <div className="flex items-center"><UserIconLucide className="mr-2 h-4 w-4 text-muted-foreground" /><strong>Nome:</strong><span className="ml-2">{selectedUserForView.name}</span></div>
               <div className="flex items-center"><Mail className="mr-2 h-4 w-4 text-muted-foreground" /><strong>Email:</strong><span className="ml-2">{selectedUserForView.email}</span></div>
-              <div className="flex items-center"><UserCheck className="mr-2 h-4 w-4 text-muted-foreground" /><strong>Status:</strong><span className="ml-2"><Badge variant={getStatusBadgeVariant(selectedUserForView.status)}>{getStatusText(selectedUserForView.status)}</Badge></span></div>
+              <div className="flex items-center"><UserCheckIcon className="mr-2 h-4 w-4 text-muted-foreground" /><strong>Status:</strong><span className="ml-2"><Badge variant={getStatusBadgeVariant(selectedUserForView.status)}>{getStatusText(selectedUserForView.status)}</Badge></span></div>
               <div className="flex items-center"><Building className="mr-2 h-4 w-4 text-muted-foreground" /><strong>Apartamento:</strong><span className="ml-2">{selectedUserForView.apartment || "N/A"}</span></div>
               {selectedUserForView.condominiumId && (
                 <div className="flex items-center"><Building2 className="mr-2 h-4 w-4 text-muted-foreground" /><strong>Condomínio:</strong><span className="ml-2">{getCondominiumById(selectedUserForView.condominiumId)?.name || "N/A"}</span></div>
@@ -662,3 +673,6 @@ export default function ManageUsersPage() {
     </div>
   );
 }
+
+
+    

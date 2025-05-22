@@ -28,7 +28,7 @@ import type { Reservation, User, ParkingSpot } from "@/types";
 import { getAllReservations } from "@/lib/reservation-service";
 import { getUsers } from "@/lib/user-service";
 import { getParkingSpots } from "@/lib/parking-spot-service";
-import { LayoutDashboard, ParkingSquare, CalendarCheck, Building, Users as UsersIcon, ArrowLeft, Loader2, History, User as UserIconLucide, Calendar as CalendarIconLucide, Bookmark, FilterX } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, Building, Users as UsersIcon, ArrowLeft, Loader2, History, User as UserIconLucide, Calendar as CalendarIconLucide, Bookmark, FilterX, Download } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { format, startOfDay, endOfDay } from "date-fns";
@@ -109,6 +109,51 @@ export default function RentalHistoryPage() {
     setSelectedUserId("all");
     setDateRange(undefined);
   };
+
+  const escapeCSVField = (field: string | undefined): string => {
+    if (field === undefined || field === null) return '""';
+    let escapedField = field.toString().replace(/"/g, '""'); // Escape double quotes
+    if (escapedField.includes(',') || escapedField.includes('\n') || escapedField.includes('"')) {
+      escapedField = `"${escapedField}"`; // Enclose in double quotes
+    }
+    return escapedField;
+  };
+
+  const handleDownloadCSV = () => {
+    if (filteredReservations.length === 0) {
+      return;
+    }
+
+    const headers = ["ID Reserva", "Vaga (Número)", "Vaga (Localização)", "Residente", "Data Início", "Data Fim"];
+    const csvRows = [
+      headers.join(','), // Header row
+      ...filteredReservations.map(res => 
+        [
+          escapeCSVField(res.id),
+          escapeCSVField(res.spotNumber),
+          escapeCSVField(res.spotLocation),
+          escapeCSVField(res.userName),
+          escapeCSVField(format(new Date(res.startTime), "dd/MM/yyyy", { locale: ptBR })),
+          escapeCSVField(format(new Date(res.endTime), "dd/MM/yyyy", { locale: ptBR })),
+        ].join(',')
+      )
+    ];
+    
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", "relatorio_historico_alugueis.csv");
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+  };
+
 
   if (isAuthLoading || (!isAuthenticated && !isAuthLoading) || (isAuthenticated && currentUser?.role !== 'manager' && !isAuthLoading)) {
     return (
@@ -221,13 +266,27 @@ export default function RentalHistoryPage() {
           <div className="w-full max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
             <Card className="w-full shadow-xl">
               <CardHeader>
-                <CardTitle className="text-2xl flex items-center">
-                  <History className="mr-3 h-7 w-7 text-primary" />
-                  Registros de Todas as Reservas
-                </CardTitle>
-                <CardDescription>
-                  Visualize o histórico completo de aluguéis de vagas. Utilize os filtros para refinar sua busca.
-                </CardDescription>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <CardTitle className="text-2xl flex items-center">
+                        <History className="mr-3 h-7 w-7 text-primary" />
+                        Registros de Todas as Reservas
+                        </CardTitle>
+                        <CardDescription>
+                        Visualize o histórico completo de aluguéis de vagas. Utilize os filtros para refinar sua busca.
+                        </CardDescription>
+                    </div>
+                    {currentUser?.role === 'manager' && (
+                        <Button 
+                            onClick={handleDownloadCSV} 
+                            disabled={filteredReservations.length === 0}
+                            variant="outline"
+                        >
+                            <Download className="mr-2 h-4 w-4" />
+                            Baixar Relatório CSV
+                        </Button>
+                    )}
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -334,5 +393,4 @@ export default function RentalHistoryPage() {
     </div>
   );
 }
-
     

@@ -19,7 +19,7 @@ import {
   SidebarGroup,
   SidebarGroupLabel
 } from "@/components/ui/sidebar";
-import { Button, buttonVariants } from "@/components/ui/button"; // Added buttonVariants
+import { Button, buttonVariants } from "@/components/ui/button"; 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Logo } from "@/components/logo";
@@ -27,7 +27,7 @@ import { UserNav } from "@/components/layout/user-nav";
 import type { User, Condominium } from "@/types";
 import { getUsers, updateUser, deleteUser } from "@/lib/user-service";
 import { getCondominiumById, getCondominiums } from "@/lib/condominium-service";
-import { LayoutDashboard, ParkingSquare, CalendarCheck, Building, Users as UsersIcon, ArrowLeft, Loader2, Eye, Edit2, Trash2, User as UserIconLucide, Mail, Building2, Calendar as CalendarIconLucide, Hash, PhoneIcon, Bookmark, History } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, Building, Users as UsersIcon, ArrowLeft, Loader2, Eye, Edit2, Trash2, User as UserIconLucide, Mail, Building2, Calendar as CalendarIconLucide, Hash, PhoneIcon, Bookmark, History, UserCheck } from "lucide-react"; // Adicionado UserCheck
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -62,6 +62,7 @@ const editUserSchema = z.object({
   email: z.string().email(), // Readonly
   apartment: z.string().min(1, "Número do apartamento é obrigatório."),
   role: z.enum(["resident", "manager"], { required_error: "O papel do usuário é obrigatório."}),
+  status: z.enum(["pending", "approved", "denied"], { required_error: "O status do usuário é obrigatório." }), // Adicionado status
   condominiumId: z.string().optional(),
   dateOfBirth: z.string().optional(),
   cpf: z.string().optional().refine(val => !val || /^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(val), {
@@ -129,6 +130,7 @@ export default function ManageUsersPage() {
         email: selectedUserForEdit.email || "",
         apartment: selectedUserForEdit.apartment || "",
         role: selectedUserForEdit.role,
+        status: selectedUserForEdit.status, // Adicionado status
         condominiumId: selectedUserForEdit.condominiumId || "",
         dateOfBirth: selectedUserForEdit.dateOfBirth ? selectedUserForEdit.dateOfBirth.split('T')[0] : "",
         cpf: selectedUserForEdit.cpf || "",
@@ -163,7 +165,7 @@ export default function ManageUsersPage() {
       
       if (currentUser?.id === userToDelete.id) {
         toast({ title: "Auto-Exclusão", description: "Você excluiu sua própria conta e será deslogado."});
-        await logout(); // logout já redireciona para /login
+        await logout(); 
       }
     } else {
       toast({ title: "Falha na Exclusão", description: "Não foi possível excluir o usuário.", variant: "destructive" });
@@ -197,6 +199,7 @@ export default function ManageUsersPage() {
       name: data.name,
       apartment: data.apartment,
       role: data.role,
+      status: data.status, // Adicionado status
       condominiumId: data.role === 'resident' ? data.condominiumId : undefined, 
       dateOfBirth: data.dateOfBirth,
       cpf: data.cpf,
@@ -229,6 +232,24 @@ export default function ManageUsersPage() {
   }
 
   const watchedRole = form.watch("role");
+
+  const getStatusBadgeVariant = (status: User['status']) => {
+    switch (status) {
+      case 'approved': return 'default'; // Primary color (usually green-ish or blue-ish by theme)
+      case 'pending': return 'secondary'; // Muted/gray color
+      case 'denied': return 'destructive'; // Red color
+      default: return 'outline';
+    }
+  };
+  const getStatusText = (status: User['status']) => {
+    switch (status) {
+      case 'approved': return 'Aprovado';
+      case 'pending': return 'Pendente';
+      case 'denied': return 'Negado';
+      default: return 'Desconhecido';
+    }
+  };
+
 
   return (
     <div className="flex min-h-screen w-full">
@@ -308,6 +329,14 @@ export default function ManageUsersPage() {
                     </SidebarMenuButton>
                   </Link>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <Link href="/admin/approvals" legacyBehavior passHref>
+                    <SidebarMenuButton tooltip="Aprovações de Cadastro">
+                      <UserCheck />
+                      <span>Aprovações</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
               </SidebarGroup>
             )}
           </SidebarMenu>
@@ -353,21 +382,23 @@ export default function ManageUsersPage() {
                         <TableRow>
                           <TableHead>Nome</TableHead>
                           <TableHead>Email</TableHead>
-                          <TableHead>Apartamento</TableHead>
-                          <TableHead>Condomínio</TableHead>
+                           <TableHead>Status</TableHead>
                           <TableHead>Papel</TableHead>
                           <TableHead className="text-right">Ações</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {allUsers.map((user) => {
-                          const condominium = user.condominiumId ? getCondominiumById(user.condominiumId) : null;
+                          // const condominium = user.condominiumId ? getCondominiumById(user.condominiumId) : null; // Condominio não está na tabela principal aqui
                           return (
                             <TableRow key={user.id}>
                               <TableCell className="font-medium">{user.name}</TableCell>
                               <TableCell>{user.email}</TableCell>
-                              <TableCell>{user.apartment || "N/A"}</TableCell>
-                              <TableCell>{condominium ? condominium.name : "N/A"}</TableCell>
+                              <TableCell>
+                                <Badge variant={getStatusBadgeVariant(user.status)}>
+                                  {getStatusText(user.status)}
+                                </Badge>
+                              </TableCell>
                               <TableCell>
                                 <Badge variant={user.role === 'manager' ? "default" : "secondary"}>
                                   {user.role === 'manager' ? 'Síndico' : 'Morador'}
@@ -416,9 +447,10 @@ export default function ManageUsersPage() {
                 Informações detalhadas do usuário.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <div className="space-y-3 py-4 text-sm">
+            <div className="space-y-3 py-4 text-sm max-h-[60vh] overflow-y-auto pr-2">
               <div className="flex items-center"><UserIconLucide className="mr-2 h-4 w-4 text-muted-foreground" /><strong>Nome:</strong><span className="ml-2">{selectedUserForView.name}</span></div>
               <div className="flex items-center"><Mail className="mr-2 h-4 w-4 text-muted-foreground" /><strong>Email:</strong><span className="ml-2">{selectedUserForView.email}</span></div>
+              <div className="flex items-center"><UserCheck className="mr-2 h-4 w-4 text-muted-foreground" /><strong>Status:</strong><span className="ml-2"><Badge variant={getStatusBadgeVariant(selectedUserForView.status)}>{getStatusText(selectedUserForView.status)}</Badge></span></div>
               <div className="flex items-center"><Building className="mr-2 h-4 w-4 text-muted-foreground" /><strong>Apartamento:</strong><span className="ml-2">{selectedUserForView.apartment || "N/A"}</span></div>
               {selectedUserForView.condominiumId && (
                 <div className="flex items-center"><Building2 className="mr-2 h-4 w-4 text-muted-foreground" /><strong>Condomínio:</strong><span className="ml-2">{getCondominiumById(selectedUserForView.condominiumId)?.name || "N/A"}</span></div>
@@ -428,6 +460,7 @@ export default function ManageUsersPage() {
               <div className="flex items-center"><Hash className="mr-2 h-4 w-4 text-muted-foreground" /><strong>CPF:</strong><span className="ml-2">{selectedUserForView.cpf || "N/A"}</span></div>
               <div className="flex items-center"><PhoneIcon className="mr-2 h-4 w-4 text-muted-foreground" /><strong>Telefone:</strong><span className="ml-2">{selectedUserForView.phone || "N/A"}</span></div>
               <div className="flex items-start"><UserIconLucide className="mr-2 h-4 w-4 text-muted-foreground shrink-0" /><strong>Descrição:</strong><p className="ml-2 break-words">{selectedUserForView.description || "N/A"}</p></div>
+              <div className="flex items-center"><CalendarCheck className="mr-2 h-4 w-4 text-muted-foreground" /><strong>Data Cadastro:</strong><span className="ml-2">{formatDate(selectedUserForView.registrationDate)}</span></div>
             </div>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => setIsViewDialogOpen(false)}>Fechar</AlertDialogCancel>
@@ -484,6 +517,24 @@ export default function ManageUsersPage() {
                         <SelectContent>
                           <SelectItem value="resident">Morador</SelectItem>
                           <SelectItem value="manager">Síndico</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status do Cadastro</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl><SelectTrigger><SelectValue placeholder="Selecione um status" /></SelectTrigger></FormControl>
+                        <SelectContent>
+                          <SelectItem value="pending">Pendente</SelectItem>
+                          <SelectItem value="approved">Aprovado</SelectItem>
+                          <SelectItem value="denied">Negado</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

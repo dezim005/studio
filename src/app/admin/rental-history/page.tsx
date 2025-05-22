@@ -28,7 +28,7 @@ import type { Reservation, User, ParkingSpot } from "@/types";
 import { getAllReservations } from "@/lib/reservation-service";
 import { getUsers } from "@/lib/user-service";
 import { getParkingSpots } from "@/lib/parking-spot-service";
-import { LayoutDashboard, ParkingSquare, CalendarCheck, Building, Users as UsersIcon, ArrowLeft, Loader2, History, User as UserIconLucide, Calendar as CalendarIconLucide, Bookmark, FilterX, Download } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, Building, Users as UsersIcon, ArrowLeft, Loader2, History, User as UserIconLucide, Calendar as CalendarIconLucide, Bookmark, FilterX, Download, UserCheck } from "lucide-react"; // Adicionado UserCheck
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { format, startOfDay, endOfDay } from "date-fns";
@@ -241,6 +241,14 @@ export default function RentalHistoryPage() {
                     </SidebarMenuButton>
                   </Link>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <Link href="/admin/approvals" legacyBehavior passHref>
+                    <SidebarMenuButton tooltip="Aprovações de Cadastro">
+                      <UserCheck />
+                      <span>Aprovações</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
               </SidebarGroup>
             )}
           </SidebarMenu>
@@ -393,4 +401,3 @@ export default function RentalHistoryPage() {
     </div>
   );
 }
-    

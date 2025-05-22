@@ -23,7 +23,7 @@ import { UserNav } from "@/components/layout/user-nav";
 import type { Reservation, ParkingSpot } from "@/types";
 import { getAllReservations } from "@/lib/reservation-service";
 import { getSpotById } from "@/lib/parking-spot-service";
-import { LayoutDashboard, ParkingSquare, CalendarCheck, Bookmark, Loader2, AlertTriangle, Building, Users, History } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, Bookmark, Loader2, AlertTriangle, Building, Users, History, UserCheck } from "lucide-react"; // Adicionado UserCheck
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
@@ -150,6 +150,14 @@ export default function MyReservationsPage() {
                     </SidebarMenuButton>
                   </Link>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <Link href="/admin/approvals" legacyBehavior passHref>
+                    <SidebarMenuButton tooltip="Aprovações de Cadastro">
+                      <UserCheck />
+                      <span>Aprovações</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
               </SidebarGroup>
             )}
           </SidebarMenu>
@@ -237,5 +245,3 @@ export default function MyReservationsPage() {
     </div>
   );
 }
-
-    

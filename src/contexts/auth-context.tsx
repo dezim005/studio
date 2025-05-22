@@ -74,6 +74,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     if (foundUser) {
+      if (foundUser.status === 'pending') {
+        toast({
+          title: "Cadastro Pendente",
+          description: "Sua conta está aguardando aprovação pelo síndico.",
+          variant: "destructive",
+        });
+        return false;
+      }
+      if (foundUser.status === 'denied') {
+        toast({
+          title: "Acesso Negado",
+          description: "Seu acesso foi negado pelo síndico.",
+          variant: "destructive",
+        });
+        return false;
+      }
+      // Somente status 'approved' pode logar
+      if (foundUser.status !== 'approved') {
+         toast({
+          title: "Status Desconhecido",
+          description: "O status da sua conta não permite o login. Contate o suporte.",
+          variant: "destructive",
+        });
+        return false;
+      }
+
       setIsAuthenticated(true);
       setUser(foundUser);
       try {
@@ -102,9 +128,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     let role: 'resident' | 'manager' = 'resident';
+    let status: 'pending' | 'approved' | 'denied' = 'pending';
     const isFirstUser = registeredUsers.length === 0;
+
     if (isFirstUser) {
       role = 'manager';
+      status = 'approved'; // Síndico é aprovado automaticamente
     }
 
     if (role === 'resident' && !data.condominiumId) {
@@ -115,8 +144,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       id: `user-${Date.now()}`,
       name: data.name,
       email: data.email,
-      password: data.password, // Lembre-se: em produção, senhas DEVEM ser hasheadas.
+      password: data.password, 
       role: role,
+      status: status,
+      registrationDate: new Date().toISOString(),
       avatarUrl: `https://placehold.co/40x40.png?text=${data.name[0]?.toUpperCase() || 'U'}`,
       dateOfBirth: "",
       apartment: "",
@@ -127,8 +158,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     saveRegisteredUsers([...registeredUsers, newUser]);
-    const roleMessage = role === 'manager' ? "Você foi registrado como Síndico." : `Você foi registrado como Morador${newUser.condominiumId ? ' do condomínio selecionado' : ''}.`;
-    return { success: true, message: `Cadastro realizado com sucesso! ${roleMessage} Você pode fazer login agora.` };
+    
+    let successMessage = "Cadastro realizado com sucesso!";
+    if (role === 'manager') {
+      successMessage += " Você foi registrado como Síndico e sua conta está ativa.";
+    } else {
+      successMessage += " Seu cadastro como Morador foi recebido e está aguardando aprovação do síndico.";
+    }
+    successMessage += " Você será notificado sobre o status."; // Simplificação, notificação real não implementada
+
+    return { success: true, message: successMessage };
   };
 
   const updateUserProfile = async (data: Partial<User>): Promise<{ success: boolean; message: string }> => {
@@ -183,5 +222,3 @@ export function useAuth() {
   }
   return context;
 }
-
-    

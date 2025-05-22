@@ -19,7 +19,7 @@ import {
   SidebarGroup,
   SidebarGroupLabel
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, ParkingSquare, CalendarCheck, ArrowLeft, Loader2, Building, Users, Bookmark, History } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, ArrowLeft, Loader2, Building, Users, Bookmark, History, UserCheck } from "lucide-react"; // Adicionado UserCheck
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
@@ -122,6 +122,14 @@ export default function RegisterSpotPage() {
                     </SidebarMenuButton>
                   </Link>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <Link href="/admin/approvals" legacyBehavior passHref>
+                    <SidebarMenuButton tooltip="Aprovações de Cadastro">
+                      <UserCheck />
+                      <span>Aprovações</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
               </SidebarGroup>
             )}
           </SidebarMenu>
@@ -155,5 +163,3 @@ export default function RegisterSpotPage() {
     </div>
   );
 }
-
-    

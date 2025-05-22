@@ -24,7 +24,7 @@ import { UserNav } from "@/components/layout/user-nav";
 import type { ParkingSpot, Reservation } from "@/types"; 
 import { getParkingSpots } from "@/lib/parking-spot-service"; 
 import { getAllReservations, addReservation } from "@/lib/reservation-service"; 
-import { LayoutDashboard, ParkingSquare, CalendarCheck, Search, List, Map, Loader2, Building, Users, Bookmark, History } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, Search, List, Map, Loader2, Building, Users, Bookmark, History, UserCheck } from "lucide-react"; // Adicionado UserCheck
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -126,9 +126,7 @@ export default function DashboardPage() {
                                         isOccupied;
         }
     }
-    // Dashboard still shows spots that are generally available by owner
-    // and have some availability configuration.
-    // The card itself will show more detailed status like "fully_booked".
+
     return spot.isAvailable && (spot.availability && spot.availability.length > 0) && matchesSearch && matchesType && matchesAvailabilityFilter;
   });
 
@@ -258,6 +256,14 @@ export default function DashboardPage() {
                     </SidebarMenuButton>
                   </Link>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <Link href="/admin/approvals" legacyBehavior passHref>
+                    <SidebarMenuButton tooltip="Aprovações de Cadastro">
+                      <UserCheck />
+                      <span>Aprovações</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
               </SidebarGroup>
             )}
           </SidebarMenu>
@@ -342,7 +348,7 @@ export default function DashboardPage() {
                             key={spot.id} 
                             spot={spot} 
                             reservationsForSpot={reservationsForThisSpot}
-                            showActions={true} // Habilitar ações no dashboard
+                            showActions={true} 
                             onBookSpotClick={() => handleOpenReservationDialog(spot)}
                           />
                         );
@@ -382,5 +388,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    

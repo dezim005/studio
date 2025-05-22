@@ -11,11 +11,11 @@ export interface ParkingSpot {
   type: 'compact' | 'standard' | 'suv' | 'motorcycle';
   location: string;
   isAvailable: boolean;
-  ownerId?: string; // ID do residente que cadastra/possui a vaga
-  ownerName?: string; // Nome do residente que cadastra/possui a vaga
+  ownerId?: string; 
+  ownerName?: string; 
   currentReservationId?: string | null;
   availability?: AvailabilitySlot[];
-  description?: string; // Para as "Observações Adicionais"
+  description?: string; 
 }
 
 export interface AvailabilitySlot {
@@ -24,13 +24,13 @@ export interface AvailabilitySlot {
   startTime: Date;
   endTime: Date;
   isRecurring: boolean;
-  recurrencePattern?: 'daily' | 'weekly' | 'monthly'; // simplified
+  recurrencePattern?: 'daily' | 'weekly' | 'monthly'; 
 }
 
 export interface Reservation {
   id:string;
   spotId: string;
-  userId: string; // ID of the resident reserving the spot
+  userId: string; 
   startTime: Date;
   endTime: Date;
   vehiclePlate?: string;
@@ -42,11 +42,14 @@ export interface User {
   email: string;
   password?: string;
   role: 'resident' | 'manager';
+  status: 'pending' | 'approved' | 'denied'; // Novo campo
+  registrationDate?: string; // Novo campo opcional
   avatarUrl?: string;
   dateOfBirth?: string;
   apartment?: string;
   cpf?: string;
   phone?: string;
   description?: string;
-  condominiumId?: string; // ID do condomínio ao qual o usuário pertence
+  condominiumId?: string; 
 }
+

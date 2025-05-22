@@ -34,7 +34,7 @@ import {
   SidebarGroup,
   SidebarGroupLabel
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, ParkingSquare, CalendarCheck, User as UserIcon, Loader2, ArrowLeft, Building, Users, Bookmark, History } from "lucide-react";
+import { LayoutDashboard, ParkingSquare, CalendarCheck, User as UserIcon, Loader2, ArrowLeft, Building, Users, Bookmark, History, UserCheck } from "lucide-react"; // Adicionado UserCheck
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -245,6 +245,14 @@ export default function ProfilePage() {
                     </SidebarMenuButton>
                   </Link>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <Link href="/admin/approvals" legacyBehavior passHref>
+                    <SidebarMenuButton tooltip="Aprovações de Cadastro">
+                      <UserCheck />
+                      <span>Aprovações</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
               </SidebarGroup>
             )}
           </SidebarMenu>
@@ -430,5 +438,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    

@@ -71,7 +71,7 @@ export default function LoginPage() {
         <div className="flex justify-center">
           <Logo />
         </div>
-        <Card className="shadow-xl w-full">
+        <Card className="shadow-xl w-full p-5">
           <CardHeader>
             <CardTitle className="text-2xl">Bem-vindo(a) de Volta!</CardTitle>
             <CardDescription>Insira suas credenciais para acessar o Vaga Livre.</CardDescription>

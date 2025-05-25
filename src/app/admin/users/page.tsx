@@ -265,7 +265,7 @@ export default function ManageUsersPage() {
 
   return (
     <div className="flex min-h-screen w-full">
-      <Sidebar collapsible="icon" variant="sidebar" className="border-r">
+      <Sidebar collapsible="icon" variant="sidebar" className="shadow-lg">
         <SidebarHeader className={cn(
           "flex items-center", 
           !isMobile && sidebarState === 'collapsed' ? "p-2 justify-center" : "p-4 justify-between",
@@ -356,7 +356,7 @@ export default function ManageUsersPage() {
       </Sidebar>
 
       <SidebarInset className="flex flex-col">
-        <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
+        <header className="sticky top-0 z-10 flex h-16 items-center gap-4 bg-white shadow-lg px-4 md:px-6">
           {isMobile && <SidebarTrigger />}
           <Link href="/" passHref legacyBehavior>
              <Button variant="outline" size="icon" className="h-8 w-8">

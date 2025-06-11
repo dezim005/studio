@@ -85,7 +85,7 @@ export default function ManageSpotAvailabilityPage() {
   if (isAuthLoading || !isAuthenticated || user === null || spot === undefined) {
     return (
       <div className="flex min-h-screen w-full">
-         <Sidebar collapsible="icon" variant="sidebar" className="border-r">
+         <Sidebar collapsible="icon" variant="sidebar" className="shadow-lg">
           <SidebarHeader className={cn(
             "flex items-center", 
             !isMobile && sidebarState === 'collapsed' ? "p-2 justify-center" : "p-4 justify-between",
@@ -103,7 +103,7 @@ export default function ManageSpotAvailabilityPage() {
           <SidebarContent> <SidebarMenu> {/* Skeleton Nav */} </SidebarMenu> </SidebarContent>
         </Sidebar>
         <SidebarInset className="flex flex-col">
-          <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
+          <header className="sticky top-0 z-10 flex h-16 items-center gap-4 bg-white shadow-lg px-4 md:px-6">
              {isMobile && <SidebarTrigger />}
              <Skeleton className="h-8 w-8 rounded-md" />
              <Skeleton className="h-6 w-48 rounded-md" />
@@ -136,7 +136,7 @@ export default function ManageSpotAvailabilityPage() {
 
   return (
     <div className="flex min-h-screen w-full">
-      <Sidebar collapsible="icon" variant="sidebar" className="border-r">
+      <Sidebar collapsible="icon" variant="sidebar" className="shadow-lg">
         <SidebarHeader className={cn(
           "flex items-center", 
           !isMobile && sidebarState === 'collapsed' ? "p-2 justify-center" : "p-4 justify-between",
@@ -227,7 +227,7 @@ export default function ManageSpotAvailabilityPage() {
       </Sidebar>
 
       <SidebarInset className="flex flex-col">
-        <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
+        <header className="sticky top-0 z-10 flex h-16 items-center gap-4 bg-white shadow-lg px-4 md:px-6">
           {isMobile && <SidebarTrigger />}
           <Link href="/my-spots" passHref legacyBehavior>
              <Button variant="outline" size="icon" className="h-8 w-8">

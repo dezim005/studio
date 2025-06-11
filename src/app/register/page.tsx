@@ -128,12 +128,12 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 sm:p-6 md:p-8">
+    <div className="w-full flex min-h-screen flex-col items-center justify-center bg-background p-4 sm:p-6 md:p-8">
       <div className="w-full max-w-md space-y-8">
         <div className="flex justify-center">
           <Logo />
         </div>
-        <Card className="shadow-xl">
+        <Card className="shadow-xl p-5">
           <CardHeader>
             <CardTitle className="text-2xl">Crie Sua Conta</CardTitle>
             <CardDescription>Preencha os campos abaixo para se registrar no Vaga Livre.</CardDescription>

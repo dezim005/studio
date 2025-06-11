@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { SpotStatusBadge, type SpotBookingStatus } from "./spot-status-badge";
 import { isSpotFullyBooked } from "@/lib/reservation-service"; 
-import { Car, MapPin, ParkingCircle, Tag, CalendarDays, User as UserIconLucide, Eye } from "lucide-react";
+import { Car, MapPin, ParkingCircle, Tag, CalendarDays, User as UserIconLucide, Eye, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context"; 
 
@@ -13,7 +13,8 @@ interface ParkingSpotCardProps {
   reservationsForSpot?: Reservation[]; 
   showActions?: boolean;
   onBookSpotClick?: (spot: ParkingSpot) => void; 
-  currentBookingStatus?: SpotBookingStatus; // Receber o status calculado pelo pai
+  onDeleteSpotClick?: (spot: ParkingSpot) => void; // Nova prop
+  currentBookingStatus?: SpotBookingStatus;
 }
 
 export function ParkingSpotCard({ 
@@ -21,7 +22,8 @@ export function ParkingSpotCard({
   reservationsForSpot = [], 
   showActions = false, 
   onBookSpotClick,
-  currentBookingStatus // Usar o status passado
+  onDeleteSpotClick, // Nova prop
+  currentBookingStatus
 }: ParkingSpotCardProps) {
   const { user } = useAuth(); 
 
@@ -33,8 +35,8 @@ export function ParkingSpotCard({
   };
 
   const canCurrentUserManage = user && spot.ownerId === user.id;
+  const canAdminManage = user && user.role === 'manager';
 
-  // Se currentBookingStatus não for passado, calcula internamente (mantendo compatibilidade)
   let statusToDisplay = currentBookingStatus;
   if (statusToDisplay === undefined) {
     if (!spot.isAvailable) {
@@ -48,7 +50,6 @@ export function ParkingSpotCard({
     }
   }
   
-
   const isBookableActionActive = 
     statusToDisplay === 'available' && 
     onBookSpotClick;
@@ -99,20 +100,31 @@ export function ParkingSpotCard({
              <Button variant="outline" disabled  className="w-full sm:w-auto">
               {statusToDisplay === 'unavailable_by_owner' ? 'Vaga Indisponível' :
                statusToDisplay === 'not_configured' ? 'Indisponível para Reserva' :
-               statusToDisplay === 'fully_booked' ? 'Totalmente Reservada' : // Ou "Indisponível (Reservada)"
+               statusToDisplay === 'fully_booked' ? 'Totalmente Reservada' : 
                'Indisponível para Reserva'}
             </Button>
           )}
-          {canCurrentUserManage && ( 
-            <Link href={`/my-spots/${spot.id}/availability`} passHref legacyBehavior>
-              <Button variant="outline" className="w-full sm:w-auto">
-                <CalendarDays className="mr-2 h-4 w-4" /> Gerenciar Disponibilidade
-              </Button>
-            </Link>
+          {(canCurrentUserManage || canAdminManage) && ( 
+            <>
+              <Link href={`/my-spots/${spot.id}/availability`} passHref legacyBehavior>
+                <Button variant="outline" className="w-full sm:w-auto">
+                  <CalendarDays className="mr-2 h-4 w-4" /> Gerenciar Disponibilidade
+                </Button>
+              </Link>
+              {onDeleteSpotClick && (
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  className="w-full sm:w-auto"
+                  onClick={() => onDeleteSpotClick(spot)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" /> Excluir Vaga
+                </Button>
+              )}
+            </>
           )}
         </CardFooter>
       )}
     </Card>
   );
 }
-

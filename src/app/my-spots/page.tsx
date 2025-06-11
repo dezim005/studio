@@ -3,13 +3,13 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ParkingSpotCard } from "@/components/parking/parking-spot-card";
 import type { ParkingSpot, Reservation } from "@/types";
-import { getParkingSpots } from "@/lib/parking-spot-service"; 
+import { getParkingSpots, deleteParkingSpot } from "@/lib/parking-spot-service"; 
 import { getAllReservations } from "@/lib/reservation-service"; 
-import { PlusCircle, ParkingSquare, LayoutDashboard, CalendarCheck, Loader2, Building, Users, Bookmark, History, UserCheck } from "lucide-react"; // Adicionado UserCheck
+import { PlusCircle, ParkingSquare, LayoutDashboard, CalendarCheck, Loader2, Building, Users, Bookmark, History, UserCheck, Trash2 } from "lucide-react"; 
 import { Logo } from "@/components/logo";
 import { UserNav } from "@/components/layout/user-nav";
 import {
@@ -28,14 +28,31 @@ import {
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function MySpotsPage() {
   const { isAuthenticated, user, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
   const { isMobile, state: sidebarState } = useSidebar();
+  const { toast } = useToast();
+
   const [allSpots, setAllSpots] = React.useState<ParkingSpot[]>([]);
   const [allReservations, setAllReservations] = React.useState<Reservation[]>([]);
   const [isLoadingData, setIsLoadingData] = React.useState(true);
+
+  const [spotToDelete, setSpotToDelete] = React.useState<ParkingSpot | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [isDeletingSpot, setIsDeletingSpot] = React.useState(false);
 
   React.useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
@@ -43,7 +60,7 @@ export default function MySpotsPage() {
     }
   }, [isAuthenticated, isAuthLoading, router]);
 
-  React.useEffect(() => {
+  const fetchData = React.useCallback(() => {
     if (isAuthenticated) {
       setIsLoadingData(true);
       const spotsFromService = getParkingSpots();
@@ -53,6 +70,40 @@ export default function MySpotsPage() {
       setIsLoadingData(false);
     }
   }, [isAuthenticated]);
+
+  React.useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleOpenDeleteDialog = (spot: ParkingSpot) => {
+    setSpotToDelete(spot);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDeleteSpot = async () => {
+    if (!spotToDelete || !user) return;
+    setIsDeletingSpot(true);
+    
+    const result = await deleteParkingSpot(spotToDelete.id, user.id, user.role);
+
+    if (result.success) {
+      toast({
+        title: "Vaga Excluída",
+        description: result.message,
+      });
+      fetchData(); // Re-fetch para atualizar a lista
+    } else {
+      toast({
+        title: "Falha ao Excluir Vaga",
+        description: result.message,
+        variant: "destructive",
+      });
+    }
+    setIsDeletingSpot(false);
+    setIsDeleteDialogOpen(false);
+    setSpotToDelete(null);
+  };
+
 
   if (isAuthLoading || !isAuthenticated || !user) {
     return (
@@ -68,7 +119,7 @@ export default function MySpotsPage() {
 
   return (
     <div className="flex min-h-screen w-full">
-      <Sidebar collapsible="icon" variant="sidebar" className="border-r">
+      <Sidebar collapsible="icon" variant="sidebar" className="shadow-lg">
         <SidebarHeader className={cn(
           "flex items-center", 
           !isMobile && sidebarState === 'collapsed' ? "p-2 justify-center" : "p-4 justify-between",
@@ -159,7 +210,7 @@ export default function MySpotsPage() {
       </Sidebar>
 
       <SidebarInset className="flex flex-col">
-        <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
+        <header className="sticky top-0 z-10 flex h-16 items-center gap-4 bg-white shadow-lg px-4 md:px-6">
           {isMobile && <SidebarTrigger />}
           <h1 className="text-xl font-semibold md:text-2xl">
             {user.role === 'manager' ? "Todas as Vagas Cadastradas" : "Minhas Vagas de Estacionamento"}
@@ -184,7 +235,7 @@ export default function MySpotsPage() {
                 <CardDescription>
                   {user.role === 'manager'
                     ? "Visualize e gerencie todas as vagas de estacionamento cadastradas no sistema."
-                    : "Visualize, edite a disponibilidade e gerencie suas vagas de estacionamento cadastradas."
+                    : "Visualize, edite a disponibilidade, gerencie e exclua suas vagas de estacionamento cadastradas."
                   }
                 </CardDescription>
               </CardHeader>
@@ -203,6 +254,7 @@ export default function MySpotsPage() {
                           spot={spot} 
                           reservationsForSpot={reservationsForThisSpot}
                           showActions 
+                          onDeleteSpotClick={handleOpenDeleteDialog}
                         />
                       );
                     })}
@@ -231,6 +283,34 @@ export default function MySpotsPage() {
           © {new Date().getFullYear()} Vaga Livre. Todos os direitos reservados.
         </footer>
       </SidebarInset>
+
+      {spotToDelete && (
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar Exclusão da Vaga</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir a vaga{" "}
+                <strong>{spotToDelete.number} ({spotToDelete.location})</strong>?
+                Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => { setIsDeleteDialogOpen(false); setSpotToDelete(null);}} disabled={isDeletingSpot}>
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmDeleteSpot}
+                disabled={isDeletingSpot}
+                className={buttonVariants({ variant: "destructive" })}
+              >
+                {isDeletingSpot && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Confirmar Exclusão
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }

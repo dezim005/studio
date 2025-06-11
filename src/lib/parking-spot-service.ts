@@ -1,7 +1,8 @@
 
 "use client";
 
-import type { ParkingSpot } from "@/types";
+import type { ParkingSpot, User } from "@/types";
+import { getReservationsBySpotId } from "./reservation-service"; // Importar serviço de reserva
 
 const PARKING_SPOTS_STORAGE_KEY = "vagaLivreParkingSpots";
 
@@ -22,7 +23,6 @@ export function getParkingSpots(): ParkingSpot[] {
   try {
     const storedSpots = localStorage.getItem(PARKING_SPOTS_STORAGE_KEY);
     if (storedSpots) {
-      // Precisamos desserializar as datas que foram armazenadas como strings
       return JSON.parse(storedSpots).map((spot: any) => ({
         ...spot,
         availability: spot.availability?.map((slot: any) => ({
@@ -49,11 +49,11 @@ export function addParkingSpot(
     type: spotData.type,
     location: spotData.location,
     description: spotData.description,
-    isAvailable: true, // Vagas novas são disponíveis por padrão
+    isAvailable: true, 
     ownerId: spotData.ownerId,
-    ownerName: spotData.ownerName, // Salvar o nome do proprietário
+    ownerName: spotData.ownerName, 
     currentReservationId: null,
-    availability: [], // Disponibilidade vazia por padrão
+    availability: [], 
   };
   const updatedSpots = [...spots, newSpot];
   saveParkingSpots(updatedSpots);
@@ -74,4 +74,34 @@ export function updateSpot(spotId: string, updatedData: Partial<ParkingSpot>): P
     return spots[spotIndex];
   }
   return undefined;
+}
+
+export async function deleteParkingSpot(spotId: string, currentUserId: string, currentUserRole: User['role']): Promise<{ success: boolean; message: string }> {
+  await new Promise(resolve => setTimeout(resolve, 300)); // Simular chamada de API
+
+  let spots = getParkingSpots();
+  const spotIndex = spots.findIndex(spot => spot.id === spotId);
+
+  if (spotIndex === -1) {
+    return { success: false, message: "Vaga não encontrada." };
+  }
+
+  const spotToDelete = spots[spotIndex];
+
+  // Verificar permissão
+  if (currentUserRole !== 'manager' && spotToDelete.ownerId !== currentUserId) {
+    return { success: false, message: "Você não tem permissão para excluir esta vaga." };
+  }
+
+  // Verificar reservas existentes
+  const reservationsForSpot = getReservationsBySpotId(spotId);
+  if (reservationsForSpot.length > 0) {
+    return { success: false, message: "Esta vaga não pode ser excluída pois possui reservas associadas. Cancele as reservas primeiro." };
+  }
+
+  // Excluir a vaga
+  spots.splice(spotIndex, 1);
+  saveParkingSpots(spots);
+
+  return { success: true, message: "Vaga excluída com sucesso." };
 }

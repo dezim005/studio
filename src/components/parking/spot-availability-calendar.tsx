@@ -31,6 +31,7 @@ import { addDays, format, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from 'date-fns/locale';
 import type { DateRange } from "react-day-picker";
 import { CalendarDays, Repeat, Trash2, PlusCircle, Loader2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Adicionado
 
 // Schema para um único slot de disponibilidade no formulário
 const formAvailabilitySlotSchema = z.object({
@@ -275,12 +276,26 @@ export function SpotAvailabilityCalendar({ spot, onSave }: SpotAvailabilityCalen
                              </div>
                           )}
                           <div className="absolute top-2 right-2 flex gap-1">
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditSlot(index)} disabled={editingSlotIndex !== null && editingSlotIndex !== index}>
-                              <CalendarDays className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => remove(index)} disabled={editingSlotIndex !== null}>
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditSlot(index)} disabled={editingSlotIndex !== null && editingSlotIndex !== index}>
+                                  <CalendarDays className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Editar Datas do Intervalo</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => remove(index)} disabled={editingSlotIndex !== null}>
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Remover Intervalo</p>
+                              </TooltipContent>
+                            </Tooltip>
                           </div>
                         </>
                       )}
@@ -308,5 +323,3 @@ export function SpotAvailabilityCalendar({ spot, onSave }: SpotAvailabilityCalen
     </Card>
   );
 }
-
-    

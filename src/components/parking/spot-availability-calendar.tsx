@@ -31,7 +31,7 @@ import { addDays, format, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from 'date-fns/locale';
 import type { DateRange } from "react-day-picker";
 import { CalendarDays, Repeat, Trash2, PlusCircle, Loader2 } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Adicionado
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Schema para um único slot de disponibilidade no formulário
 const formAvailabilitySlotSchema = z.object({
@@ -323,3 +323,4 @@ export function SpotAvailabilityCalendar({ spot, onSave }: SpotAvailabilityCalen
     </Card>
   );
 }
+

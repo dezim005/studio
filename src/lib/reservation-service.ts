@@ -3,6 +3,7 @@
 
 import type { Reservation, ParkingSpot, AvailabilitySlot } from "@/types";
 import { getSpotById } from "./parking-spot-service"; 
+import { getUserById } from "./user-service"; // Importar getUserById
 import { startOfDay, endOfDay, isEqual, eachDayOfInterval, isWithinInterval, format } from "date-fns";
 
 const RESERVATIONS_STORAGE_KEY = "vagaLivreReservations";
@@ -60,7 +61,7 @@ function isWithinAvailabilitySlot(
 }
 
 export async function addReservation(
-  reservationData: Omit<Reservation, "id">
+  reservationData: Omit<Reservation, "id" | "renterName"> // renterName será adicionado aqui
 ): Promise<{ success: boolean; message: string; reservation?: Reservation }> {
   await new Promise(resolve => setTimeout(resolve, 300)); 
 
@@ -96,11 +97,14 @@ export async function addReservation(
     return { success: false, message: "Este período já está reservado ou entra em conflito com uma reserva existente." };
   }
 
+  const renter = getUserById(reservationData.userId);
+
   const newReservation: Reservation = {
     id: `res-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
     ...reservationData,
     startTime: requestedStart, 
-    endTime: requestedEnd,     
+    endTime: requestedEnd,
+    renterName: renter?.name, // Adiciona o nome do locatário
   };
 
   const allReservations = getAllReservations();
@@ -110,7 +114,7 @@ export async function addReservation(
 }
 
 export async function cancelReservation(reservationId: string, currentUserId: string): Promise<{ success: boolean; message: string }> {
-  await new Promise(resolve => setTimeout(resolve, 300)); // Simula chamada de API
+  await new Promise(resolve => setTimeout(resolve, 300)); 
   
   let allReservations = getAllReservations();
   const reservationIndex = allReservations.findIndex(res => res.id === reservationId);
@@ -128,8 +132,6 @@ export async function cancelReservation(reservationId: string, currentUserId: st
   // Opcional: Verificar se a reserva já passou
   if (new Date() > new Date(reservationToCancel.endTime)) {
     // return { success: false, message: "Não é possível cancelar uma reserva que já terminou." };
-    // Para este protótipo, vamos permitir o cancelamento mesmo que já tenha passado, para facilitar testes.
-    // Em um app real, essa regra seria importante.
   }
   
   allReservations.splice(reservationIndex, 1);

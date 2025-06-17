@@ -34,6 +34,7 @@ export interface Reservation {
   startTime: Date;
   endTime: Date;
   vehiclePlate?: string;
+  renterName?: string; // Nome do usuário que fez a reserva
 }
 
 export interface User {
@@ -42,8 +43,8 @@ export interface User {
   email: string;
   password?: string;
   role: 'resident' | 'manager';
-  status: 'pending' | 'approved' | 'denied'; // Novo campo
-  registrationDate?: string; // Novo campo opcional
+  status: 'pending' | 'approved' | 'denied'; 
+  registrationDate?: string; 
   avatarUrl?: string;
   dateOfBirth?: string;
   apartment?: string;
